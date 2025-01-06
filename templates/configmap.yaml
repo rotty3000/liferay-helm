@@ -3,7 +3,7 @@ kind: ConfigMap
 metadata:
   name: liferay-configuration
   labels:
-    {{- include "liferay.labels" . | nindent 4 }}
+    {{- include "liferay-helm.labels" . | nindent 4 }}
   {{- with .Values.configmap.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
