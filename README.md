@@ -1,42 +1,43 @@
 # liferay-helm
+
 A Helm Chart for Liferay DXP
 
-### Deploy Helm Chart
+## Install the Chart
+
+### For Local Development
+
+#### Setup a local Kubernetes cluster
+
+The simplest and most comprehensive approach is to use K3d because it easily supports ingress and seamlessly integrates with hostname resolution provided by Docker's support for `*.docker.localhost` addresses. (Liferay will be found at `main.dxp.docker.localhost`.)
 
 ```shell
-helm upgrade -i foo .
+k3d cluster create playground \
+  -p "80:80@loadbalancer" \
+  -p "443:443@loadbalancer" \
+  --registry-create registry:0.0.0.0:5000
 ```
 
-## Uninstall Helm Chart
+#### Install the Chart for Local Development
+
+It is recommended to install the entire chart into a custom namespace.
 
 ```shell
-helm uninstall foo .
+helm upgrade -i liferay-helm \
+	-n liferay-system \
+	--create-namespace \
+	.
 ```
 
-### Watch resources
+By default the chart will deploy `liferay/dxp:latest`.
+
+#### Specify a version of Liferay DXP
+
+By supplying the value of `image.tag` we can select the specific version of Liferay DXP to deploy.
 
 ```shell
-alias kall='k get -A all,cm,ingress,sa,pvc --field-selector=metadata.namespace!=kube-system'
-alias w='watch -n.5 '
-w kall
-```
-
-### Watch Events
-
-```shell
-k get events -w
-```
-
-### Watch Logs (with string `foo`)
-
-```shell
-k stern foo
-```
-
-### Example Install
-
-Don't forget to set the `image.tag` value.
-
-```shell
-helm upgrade -i liferay-helm --create-namespace -n liferay-system --set image.tag=latest .
+helm upgrade -i liferay-helm \
+	-n liferay-system \
+	--create-namespace \
+	--set image.tag=2024.q3.13 \
+	.
 ```
