@@ -1,3 +1,6 @@
+# liferay-helm
+A Helm Chart for Liferay DXP
+
 ### Deploy Helm Chart
 
 ```shell
