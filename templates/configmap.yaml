@@ -9,4 +9,56 @@ metadata:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 data:
+  portal-ext.properties: |
+    include-and-override=portal-custom.properties
+
+    #
+    # PostgreSQL
+    #
+    # jdbc.default.driverClassName=org.postgresql.Driver
+    # jdbc.default.url=jdbc:postgresql://postgres:5432/lportal?useUnicode=true&characterEncoding=UTF-8&useFastDateParsing=false
+    # jdbc.default.username=
+    # jdbc.default.password=
+
+    notification.email.template.enabled=false
+    passwords.default.policy.lockout.duration=3600
+    passwords.default.policy.lockout=true
+    passwords.default.policy.max.failure=20
+    passwords.default.policy.reset.failure.count=3600
+    setup.wizard.enabled=false
+    upgrade.database.auto.run=true
+    upgrade.log.context.enabled=true
+    upgrade.report.enabled=true
+    virtual.hosts.valid.hosts=*
+    web.server.forwarded.host.enabled=true
+    web.server.forwarded.protocol.enabled=true
+    web.server.http.port=80
+    web.server.https.port=443
+    web.server.protocol=http
+
+    company.default.name=Liferay DXP Main
+    #company.default.web.id=main.dxp.docker.localhost
+    company.default.virtual.host.name=main.dxp.docker.localhost
+    company.default.virtual.host.mail.domain=main.dxp.docker.localhost
+    company.default.virtual.host.sync.on.startup=true
+
+    module.framework.properties.org.apache.felix.configadmin.plugin.interpolation.secretsdir=/opt/liferay/osgi/configs,/var/run/secrets/kubernetes.io/serviceaccount
+
+    # As a System admin, I would like to use Site/Instance OSGi configurations across different systems
+    feature.flag.LPS-155284=true
+
+    # SRE-5860 Enable TCP keep alive
+    configuration.override.com.liferay.portal.http.internal.configuration.HttpConfiguration_tcpKeepAliveEnabled=B"true"
+
+    # SRE-5749 enable FeatureFlag LPS-202104
+    feature.flag.LPS-202104=true
+
+  com.liferay.portal.k8s.agent.configuration.PortalK8sAgentConfiguration.config: |
+    apiServerHost="$[env:KUBERNETES_SERVICE_HOST]"
+    apiServerPort="$[env:KUBERNETES_SERVICE_PORT]"
+    apiServerSSL=b"true"
+    caCertData="$[secret:ca.crt]"
+    namespace="$[secret:namespace]"
+    saToken="$[secret:token]"
+
   {{- toYaml .Values.configmap.data | nindent 2 }}

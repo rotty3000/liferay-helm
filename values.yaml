@@ -11,39 +11,15 @@ image:
   # This sets the pull policy for images.
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+  tag: "latest"
 
 configmap:
   # Annotations to add to the configmap
   annotations: {}
   # Data to add to the configmap
   data:
-    portal-ext.properties: |
+    portal-custom.properties: |
       include-and-override=portal-developer.properties
-
-      #
-      # MySQL
-      #
-      # jdbc.default.driverClassName=org.postgresql.Driver
-      # jdbc.default.url=jdbc:postgresql://postgres:5432/lportal?useUnicode=true&characterEncoding=UTF-8&useFastDateParsing=false
-      # jdbc.default.username=
-      # jdbc.default.password=
-
-      notification.email.template.enabled=false
-      passwords.default.policy.lockout.duration=3600
-      passwords.default.policy.lockout=true
-      passwords.default.policy.max.failure=20
-      passwords.default.policy.reset.failure.count=3600
-      setup.wizard.enabled=false
-      upgrade.database.auto.run=true
-      upgrade.log.context.enabled=true
-      upgrade.report.enabled=true
-      virtual.hosts.valid.hosts=*
-      web.server.forwarded.host.enabled=true
-      web.server.forwarded.protocol.enabled=true
-      web.server.http.port=8080
-      web.server.https.port=443
-      web.server.protocol=http
 
 # This is for the secretes for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 imagePullSecrets: []
@@ -92,14 +68,14 @@ service:
 
 # This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
 ingress:
-  enabled: false
+  enabled: true
   className: ""
   annotations:
     {}
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
   hosts:
-    - host: liferay.docker.localhost
+    - host: "*.dxp.docker.localhost"
       paths:
         - path: /
           pathType: ImplementationSpecific
@@ -151,18 +127,14 @@ autoscaling:
   # targetMemoryUtilizationPercentage: 80
 
 # Additional volumes on the output Deployment definition.
-volumes:
-  - name: liferay-file-resources
-    configMap:
-      name: liferay-configuration
-      optional: true
+volumes: {}
 
 # Additional volumeMounts on the output Deployment definition.
-volumeMounts:
-  - mountPath: /opt/liferay/portal-ext.properties
-    name: liferay-file-resources
-    subPath: portal-ext.properties
-    readOnly: true
+volumeMounts: {}
+  # - mountPath: /opt/liferay/portal-ext.properties
+  #   name: liferay-file-resources
+  #   subPath: portal-ext.properties
+  #   readOnly: true
 
 nodeSelector: {}
 

@@ -57,8 +57,20 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           volumeMounts:
-            - name: osgi-state
-              mountPath: /opt/liferay/osgi/state
+            - mountPath: /opt/liferay/osgi/state
+              name: osgi-state
+            - mountPath: /opt/liferay/portal-custom.properties
+              name: liferay-file-resources
+              subPath: portal-custom.properties
+              readOnly: true
+            - mountPath: /opt/liferay/portal-ext.properties
+              name: liferay-file-resources
+              subPath: portal-ext.properties
+              readOnly: true
+            - mountPath: /opt/liferay/osgi/configs/com.liferay.portal.k8s.agent.configuration.PortalK8sAgentConfiguration.config
+              name: liferay-file-resources
+              subPath: com.liferay.portal.k8s.agent.configuration.PortalK8sAgentConfiguration.config
+              readOnly: true
             {{- with .Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
@@ -74,19 +86,24 @@ spec:
       schedulingGates:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.podSecurityContext }}
       securityContext:
+        fsGroup: 1000
+        {{- with .Values.podSecurityContext }}
         {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- end }}
       serviceAccountName: {{ include "liferay-helm.serviceAccountName" . }}
       {{- with .Values.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.volumes }}
       volumes:
+        - name: liferay-file-resources
+          configMap:
+            name: liferay-configuration
+            optional: true
+        {{- with .Values.volumes }}
         {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- end }}
   updateStrategy:
     type: RollingUpdate
   volumeClaimTemplates:
