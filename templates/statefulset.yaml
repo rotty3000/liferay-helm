@@ -40,6 +40,12 @@ spec:
           {{- end }}
           {{- with .Values.securityContext }}
           securityContext:
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
             {{- toYaml . | nindent 12 }}
           {{- end }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
@@ -49,28 +55,65 @@ spec:
               containerPort: {{ .Values.service.port }}
               protocol: TCP
           livenessProbe:
-            {{- toYaml .Values.livenessProbe | nindent 12 }}
+            httpGet:
+              path: /c/portal/robots
+              port: http
+            failureThreshold: 20
+            initialDelaySeconds: 30
+            periodSeconds: 10
           readinessProbe:
-            {{- toYaml .Values.readinessProbe | nindent 12 }}
+            httpGet:
+              path: /c/portal/robots
+              port: http
+            failureThreshold: 20
+            initialDelaySeconds: 30
+            periodSeconds: 10
           {{- with .Values.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           volumeMounts:
+            # Mounts for liferay working directories allowing the
+            # container's root file system to remain readonly.
+            - mountPath: /opt/liferay/data
+              name: liferay-working-data
+              subPath: liferay/data
+            - mountPath: /opt/liferay/logs
+              name: liferay-working-data
+              subPath: liferay/logs
+            - mountPath: /opt/liferay/tomcat/temp
+              name: liferay-working-data
+              subPath: tomcat/temp
+            - mountPath: /opt/liferay/tomcat/logs
+              name: liferay-working-data
+              subPath: tomcat/logs
+            - mountPath: /opt/liferay/tomcat/work
+              name: liferay-working-data
+              subPath: tomcat/work
             - mountPath: /opt/liferay/osgi/state
-              name: osgi-state
-            - mountPath: /opt/liferay/portal-custom.properties
+              name: liferay-working-data
+              subPath: osgi/state
+            - mountPath: /opt/liferay/routes
+              name: liferay-working-data
+              subPath: liferay/routes
+            - mountPath: /opt/liferay/liferay.pid
+              name: liferay-working-data
+              subPath: liferay/liferay.pid
+
+            # Mounted configuration files
+            - mountPath: /opt/liferay/osgi/configs/com.liferay.portal.k8s.agent.configuration.PortalK8sAgentConfiguration.config
               name: liferay-file-resources
-              subPath: portal-custom.properties
+              subPath: com.liferay.portal.k8s.agent.configuration.PortalK8sAgentConfiguration.config
               readOnly: true
             - mountPath: /opt/liferay/portal-ext.properties
               name: liferay-file-resources
               subPath: portal-ext.properties
               readOnly: true
-            - mountPath: /opt/liferay/osgi/configs/com.liferay.portal.k8s.agent.configuration.PortalK8sAgentConfiguration.config
+            - mountPath: /opt/liferay/portal-custom.properties
               name: liferay-file-resources
-              subPath: com.liferay.portal.k8s.agent.configuration.PortalK8sAgentConfiguration.config
+              subPath: portal-custom.properties
               readOnly: true
+
             {{- with .Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
@@ -88,9 +131,6 @@ spec:
       {{- end }}
       securityContext:
         fsGroup: 1000
-        {{- with .Values.podSecurityContext }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
       serviceAccountName: {{ include "liferay-helm.serviceAccountName" . }}
       {{- with .Values.tolerations }}
       tolerations:
@@ -108,7 +148,7 @@ spec:
     type: RollingUpdate
   volumeClaimTemplates:
   - metadata:
-      name: osgi-state
+      name: liferay-working-data
     spec:
       accessModes: [ "ReadWriteOnce" ]
       resources:
