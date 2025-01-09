@@ -27,15 +27,20 @@ spec:
     spec:
       containers:
       - name: {{ $.Chart.Name }}-postgres
-        {{- if .env }}
-        {{- with .env }}
         env:
+          - name: POSTGRES_DB
+            value: {{ .config.database }}
+          - name: POSTGRES_PASSWORD
+            value: {{ .config.password }}
+          - name: POSTGRES_USER
+            value: {{ .config.user }}
+          - name: PGUSER
+            value: {{ .config.user }}
+          {{- if .env }}
+          {{- with .env }}
           {{- toYaml . | nindent 10 }}
-        {{- end }}
-        {{- end }}
-        envFrom:
-        - secretRef:
-            name: {{ include "liferay-helm.fullname" $ }}-postgres-secret
+          {{- end }}
+          {{- end }}
         image: {{ printf "%s:%s" (default "postgres" .image.repository) ((default "16" .image.tag) | toString) }}
         imagePullPolicy: {{ $.Values.image.pullPolicy }}
         livenessProbe:
@@ -61,22 +66,6 @@ spec:
       resources:
         requests:
           storage: {{ default "1Gi" .storage}}
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: {{ include "liferay-helm.fullname" $ }}-postgres-secret
-  labels:
-    app: {{ $.Chart.Name }}-postgres
-    {{- include "liferay-helm.labels" $ | nindent 4 }}
-data:
-  POSTGRES_DB: {{ .config.database | b64enc | quote }}
-  POSTGRES_PASSWORD: {{ .config.password | b64enc | quote }}
-  POSTGRES_USER: {{ .config.user | b64enc | quote }}
-  PGUSER: {{ .config.user | b64enc | quote }}
-  {{- range $k, $v := .config.extra }}
-  {{ $k }} : {{ $v | b64enc | quote }}
-  {{- end }}
 ---
 apiVersion: v1
 kind: Service
