@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: liferay-configuration
+  name: {{ include "liferay-helm.fullname" . }}
   labels:
     {{- include "liferay-helm.labels" . | nindent 4 }}
   {{- with .Values.configmap.annotations }}
@@ -15,12 +15,15 @@ data:
     #
     # PostgreSQL
     #
-    # jdbc.default.driverClassName=org.postgresql.Driver
-    # jdbc.default.url=jdbc:postgresql://postgres:5432/lportal?useUnicode=true&characterEncoding=UTF-8&useFastDateParsing=false
-    # jdbc.default.username=
-    # jdbc.default.password=
+    jdbc.default.driverClassName=org.postgresql.Driver
+    {{- with .Values.postgres.config }}
+    jdbc.default.url=jdbc:postgresql://{{ default (printf "%s-postgres" (include "liferay-helm.fullname" $)) .host }}:{{ .port }}/{{ .database }}?{{ .parameters }}
+    jdbc.default.username={{ .user }}
+    jdbc.default.password={{ .password }}
+    {{- end }}
 
     notification.email.template.enabled=false
+    passwords.default.policy.change.required=false
     passwords.default.policy.lockout.duration=3600
     passwords.default.policy.lockout=true
     passwords.default.policy.max.failure=20

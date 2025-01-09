@@ -2,16 +2,9 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-# This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
-replicaCount: 1
-
-# This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
-image:
-  repository: liferay/dxp
-  # This sets the pull policy for images.
-  pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: "latest"
+################################################################################
+#### Commonly used variables ###################################################
+################################################################################
 
 configmap:
   # Annotations to add to the configmap
@@ -21,40 +14,15 @@ configmap:
     portal-custom.properties: |
       include-and-override=portal-developer.properties
 
-    # foo.config: |
-    #   foo=bar
+    LIFERAY_DEFAULT_PERIOD_ADMIN_PERIOD_PASSWORD: testhelm
+    LIFERAY_DEFAULT_PERIOD_ADMIN_PERIOD_SCREEN_PERIOD_NAME: testhelm
+    LIFERAY_DEFAULT_PERIOD_ADMIN_PERIOD_EMAIL_PERIOD_ADDRESS_PERIOD_PREFIX: testhelm
+    LIFERAY_DEFAULT_PERIOD_ADMIN_PERIOD_FIRST_PERIOD_NAME: "Test"
+    LIFERAY_DEFAULT_PERIOD_ADMIN_PERIOD_MIDDLE_PERIOD_NAME: ""
+    LIFERAY_DEFAULT_PERIOD_ADMIN_PERIOD_LAST_PERIOD_NAME: "Helm"
 
-# This is for the secretes for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
-imagePullSecrets: []
-# This is to override the chart name.
-nameOverride: ""
-fullnameOverride: ""
-
-# This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/
-serviceAccount:
-  # Specifies whether a service account should be created
-  create: true
-  # Automatically mount a ServiceAccount's API credentials?
-  automount: true
-  # Annotations to add to the service account
-  annotations: {}
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
-  name: ""
-
-# This is for setting Kubernetes Annotations to a Pod.
-# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
-podAnnotations: {}
-# This is for setting Kubernetes Labels to a Pod.
-# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
-podLabels: {}
-
-# This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
-service:
-  # This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
-  type: ClusterIP
-  # This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
-  port: 8080
+    # license.xml: |
+    #   <license>
 
 # This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
 ingress:
@@ -74,10 +42,53 @@ ingress:
   #    hosts:
   #      - chart-example.local
 
-# See https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
-resources: {}
+# This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
+image:
+  repository: liferay/dxp
+  # This sets the pull policy for images.
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "latest"
 
-# This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/
+# This is for the secretes for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+imagePullSecrets: []
+
+# Setup integration with a PostgreSQL DB server.
+postgres:
+  # Configure the simplified Postgres deployment
+  # (primarily used for local development)
+  enabled: false
+
+  # If enabled=true set the amount of storage requested by the PersistentVolumeClaim
+  storage: 1Gi
+
+  # If enabled=true set the postgres image to use.
+  image:
+    repository: postgres
+    tag: 16
+
+  # Database configuration values
+  config:
+    user: postgres
+    password: postgres
+    database: lportal
+    host: liferay-helm-postgres
+    port: 5432
+    parameters: "useUnicode=true&characterEncoding=UTF-8&useFastDateParsing=false"
+
+# Setup the amount of storage requests by the DXP PersistentVolumeClaim
+storage: 1Gi
+
+################################################################################
+#### Less common fine tuning options ###########################################
+################################################################################
+
+# This is for setting the node selection constraints.
+# For more information checkout: https://kubernetes.io/docs/tasks/configure-pod-container/assign-pods-nodes-using-node-affinity/
+affinity: {}
+
+# This section is for setting up autoscaling.
+# For more information checkout: https://kubernetes.io/docs/concepts/workloads/autoscaling/
 autoscaling:
   enabled: false
   minReplicas: 1
@@ -85,19 +96,60 @@ autoscaling:
   targetCPUUtilizationPercentage: 80
   # targetMemoryUtilizationPercentage: 80
 
-# Additional volumes on the output Deployment definition.
+# This is to override the chart name.
+nameOverride: ""
+fullnameOverride: ""
+
+# This is the simplest form of no selection constraint.
+# For more information checkout: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
+nodeSelector: {}
+
+# This is for setting Kubernetes Annotations to a Pod.
+# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+podAnnotations: {}
+
+# This is for setting Kubernetes Labels to a Pod.
+# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+podLabels: {}
+
+# This will set the replicaset count.
+# For more information checkout: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
+replicaCount: 1
+
+# This is for setting the resource requests and limits of the pods.
+# For more information checkout: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+resources: {}
+
+# This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
+service:
+  # This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
+  type: ClusterIP
+  # This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
+  port: 8080
+
+# This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Automatically mount a ServiceAccount's API credentials?
+  automount: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+# Tolerations allow the scheduler to schedule pods with matching taints.
+# For more information checkout: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
+tolerations: []
+
+# Additional volumes on the output StatefulSet definition.
 volumes: {}
 
-# Additional volumeMounts on the output Deployment definition.
+# Additional volumeMounts on the output StatefulSet definition.
 volumeMounts:
   {}
   # - mountPath: /opt/liferay/osgi/config/foo.config
   #   name: liferay-file-resources
   #   subPath: foo.config
   #   readOnly: true
-
-nodeSelector: {}
-
-tolerations: []
-
-affinity: {}

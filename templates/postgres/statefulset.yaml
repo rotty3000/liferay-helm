@@ -1,0 +1,117 @@
+{{- if .Values.postgres.enabled }}
+{{- with .Values.postgres }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "liferay-helm.fullname" $ }}-postgres
+  labels:
+    app: {{ $.Chart.Name }}-postgres
+    {{- include "liferay-helm.labels" $ | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ $.Chart.Name }}-postgres
+      {{- include "liferay-helm.selectorLabels" $ | nindent 6 }}
+  serviceName: {{ include "liferay-helm.fullname" $ }}-postgres
+  template:
+    metadata:
+      labels:
+        app: {{ $.Chart.Name }}-postgres
+        {{- include "liferay-helm.labels" $ | nindent 8 }}
+        {{- if .podLabels }}
+        {{- with .podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- end }}
+    spec:
+      containers:
+      - name: {{ $.Chart.Name }}-postgres
+        {{- if .env }}
+        {{- with .env }}
+        env:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- end }}
+        envFrom:
+        - secretRef:
+            name: {{ include "liferay-helm.fullname" $ }}-postgres-secret
+        image: {{ printf "%s:%s" (default "postgres" .image.repository) ((default "16" .image.tag) | toString) }}
+        imagePullPolicy: {{ $.Values.image.pullPolicy }}
+        livenessProbe:
+          exec:
+            command: ["sh", "-c", "pg_isready", "-U", "$POSTGRES_USER"]
+        ports:
+        - name: postgres
+          containerPort: {{ default "5432" .config.port }}
+          protocol: TCP
+        readinessProbe:
+          exec:
+            command: ["sh", "-c", "pg_isready", "-U", "$POSTGRES_USER"]
+        volumeMounts:
+        - mountPath: /var/lib/postgresql/data
+          name: liferay-postgres-pvc
+  updateStrategy:
+    type: RollingUpdate
+  volumeClaimTemplates:
+  - metadata:
+      name: liferay-postgres-pvc
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: {{ default "1Gi" .storage}}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "liferay-helm.fullname" $ }}-postgres-secret
+  labels:
+    app: {{ $.Chart.Name }}-postgres
+    {{- include "liferay-helm.labels" $ | nindent 4 }}
+data:
+  POSTGRES_DB: {{ .config.database | b64enc | quote }}
+  POSTGRES_PASSWORD: {{ .config.password | b64enc | quote }}
+  POSTGRES_USER: {{ .config.user | b64enc | quote }}
+  PGUSER: {{ .config.user | b64enc | quote }}
+  {{- range $k, $v := .config.extra }}
+  {{ $k }} : {{ $v | b64enc | quote }}
+  {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $.Chart.Name }}-postgres
+  labels:
+    app: {{ $.Chart.Name }}-postgres
+    {{- include "liferay-helm.labels" $ | nindent 4 }}
+spec:
+  selector:
+    app: {{ $.Chart.Name }}-postgres
+    {{- include "liferay-helm.labels" $ | nindent 4 }}
+  ports:
+  - name: postgres
+    port: {{ .config.port }}
+    targetPort: postgres
+    protocol: TCP
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $.Chart.Name }}-postgres-headless
+  labels:
+    app: {{ $.Chart.Name }}-postgres
+    {{- include "liferay-helm.labels" $ | nindent 4 }}
+spec:
+  clusterIP: None # This is what makes it headless
+  selector:
+    app: {{ $.Chart.Name }}-postgres
+    {{- include "liferay-helm.labels" $ | nindent 4 }}
+  ports:
+  - name: postgres
+    port: {{ .config.port }}
+    targetPort: postgres
+    protocol: TCP
+{{- end }}
+{{- end }}

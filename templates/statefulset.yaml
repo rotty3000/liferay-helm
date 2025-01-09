@@ -28,26 +28,30 @@ spec:
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      initContainers:
+        - name: {{ .Chart.Name }}-pre-populate-dxp-data
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          command: ["/bin/sh","-c"]
+          args:
+            - |
+              if [ ! -e /temp/liferay/.init ]; then
+                mkdir -p /temp/liferay/data
+                cp -rv /opt/liferay/data/* /temp/liferay/data
+
+                touch /temp/liferay/.init
+              fi
+          volumeMounts:
+          - mountPath: /temp
+            name: liferay-working-data-pvc
       containers:
         - name: {{ .Chart.Name }}
           {{- with .Values.env }}
           env:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.envFrom }}
           envFrom:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- with .Values.securityContext }}
-          securityContext:
-            capabilities:
-              drop:
-              - ALL
-            readOnlyRootFilesystem: true
-            runAsNonRoot: true
-            runAsUser: 1000
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
+            - configMapRef:
+                name: {{ include "liferay-helm.fullname" . }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
@@ -72,32 +76,39 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
+          # securityContext:
+          #   capabilities:
+          #     drop:
+          #     - ALL
+          #   readOnlyRootFilesystem: true
+          #   runAsNonRoot: true
+          #   runAsUser: 1000
           volumeMounts:
             # Mounts for liferay working directories allowing the
             # container's root file system to remain readonly.
             - mountPath: /opt/liferay/data
-              name: liferay-working-data
+              name: liferay-working-data-pvc
               subPath: liferay/data
             - mountPath: /opt/liferay/logs
-              name: liferay-working-data
+              name: liferay-working-data-pvc
               subPath: liferay/logs
             - mountPath: /opt/liferay/tomcat/temp
-              name: liferay-working-data
+              name: liferay-working-data-pvc
               subPath: tomcat/temp
             - mountPath: /opt/liferay/tomcat/logs
-              name: liferay-working-data
+              name: liferay-working-data-pvc
               subPath: tomcat/logs
             - mountPath: /opt/liferay/tomcat/work
-              name: liferay-working-data
+              name: liferay-working-data-pvc
               subPath: tomcat/work
             - mountPath: /opt/liferay/osgi/state
-              name: liferay-working-data
+              name: liferay-working-data-pvc
               subPath: osgi/state
             - mountPath: /opt/liferay/routes
-              name: liferay-working-data
+              name: liferay-working-data-pvc
               subPath: liferay/routes
             - mountPath: /opt/liferay/liferay.pid
-              name: liferay-working-data
+              name: liferay-working-data-pvc
               subPath: liferay/liferay.pid
 
             # Mounted configuration files
@@ -112,6 +123,10 @@ spec:
             - mountPath: /opt/liferay/portal-custom.properties
               name: liferay-file-resources
               subPath: portal-custom.properties
+              readOnly: true
+            - mountPath: /opt/liferay/deploy/license.xml
+              name: liferay-file-resources
+              subPath: license.xml
               readOnly: true
 
             {{- with .Values.volumeMounts }}
@@ -139,7 +154,7 @@ spec:
       volumes:
         - name: liferay-file-resources
           configMap:
-            name: liferay-configuration
+            name: {{ include "liferay-helm.fullname" . }}
             optional: true
         {{- with .Values.volumes }}
         {{- toYaml . | nindent 8 }}
@@ -148,9 +163,9 @@ spec:
     type: RollingUpdate
   volumeClaimTemplates:
   - metadata:
-      name: liferay-working-data
+      name: liferay-working-data-pvc
     spec:
       accessModes: [ "ReadWriteOnce" ]
       resources:
         requests:
-          storage: 1Gi
+          storage: {{ default "1Gi" .Values.storage }}
