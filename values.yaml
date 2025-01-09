@@ -53,6 +53,9 @@ image:
 # This is for the secretes for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 imagePullSecrets: []
 
+# Setup the amount of storage requests by the DXP PersistentVolumeClaim
+storage: 1Gi
+
 # Setup integration with a PostgreSQL DB server.
 postgres:
   # Configure the simplified Postgres deployment
@@ -76,8 +79,27 @@ postgres:
     port: 5432
     parameters: "useUnicode=true&characterEncoding=UTF-8&useFastDateParsing=false"
 
-# Setup the amount of storage requests by the DXP PersistentVolumeClaim
-storage: 1Gi
+# Setup integration with a PostgreSQL DB server.
+elasticsearch:
+  # Configure the simplified Postgres deployment
+  # (primarily used for local development)
+  enabled: false
+
+  # If enabled=true set the amount of storage requested by the PersistentVolumeClaim
+  storage: 1Gi
+
+  # If enabled=true set the postgres image to use.
+  image:
+    repository: elasticsearch
+    tag: "8.17.0"
+
+  # Database configuration values
+  config:
+    user: elasticsearch
+    password: elasticsearch
+    clusterName: liferay_cluster
+    host: liferay-helm-elasticsearch
+    port: 9200
 
 ################################################################################
 #### Less common fine tuning options ###########################################
