@@ -64,4 +64,11 @@ data:
     namespace="$[secret:namespace]"
     saToken="$[secret:token]"
 
+  com.liferay.portal.search.elasticsearch7.configuration.ElasticsearchConfiguration.config: |
+    {{- with .Values.elasticsearch.config }}
+    clusterName="{{ .database }}"
+    networkHostAddresses=["{{ default (printf "%s-elasticsearch" (include "liferay-helm.fullname" $)) .host }}:{{ .port }}"]
+    operationMode="REMOTE"
+    {{- end }}
+
   {{- toYaml .Values.configmap.data | nindent 2 }}
