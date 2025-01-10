@@ -1,4 +1,4 @@
-{{- if .Values.elasticsearch.enabled }}
+{{- if .Values.elasticsearch.internal.enabled }}
 {{- with .Values.elasticsearch }}
 apiVersion: apps/v1
 kind: StatefulSet
@@ -8,7 +8,7 @@ metadata:
     app: {{ $.Chart.Name }}-elasticsearch
     {{- include "liferay-helm.labels" $ | nindent 4 }}
 spec:
-  replicas: {{ .replicaCount }}
+  replicas: {{ .internal.replicaCount }}
   selector:
     matchLabels:
       app: {{ $.Chart.Name }}-elasticsearch
@@ -19,11 +19,6 @@ spec:
       labels:
         app: {{ $.Chart.Name }}-elasticsearch
         {{- include "liferay-helm.labels" $ | nindent 8 }}
-        {{- if .podLabels }}
-        {{- with .podLabels }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
-        {{- end }}
     spec:
       initContainers:
         - name: increase-vm-max-map
@@ -37,7 +32,7 @@ spec:
           securityContext:
             privileged: true
         - name: install-plugins
-          image:  {{ printf "%s:%s" (default "elasticsearch" .image.repository) ((default "8.17.0" .image.tag) | toString) }}
+          image:  {{ printf "%s:%s" (default "elasticsearch" .internal.image.repository) ((default "8.17.0" .internal.image.tag) | toString) }}
           imagePullPolicy: {{ $.Values.image.pullPolicy }}
           command:
             - 'sh'
@@ -78,21 +73,14 @@ spec:
             value: "-Xms256m -Xmx256m"
           - name: ELASTIC_PASSWORD
             value: {{ .config.password }}
-          {{- if .env }}
-          {{- with .env }}
+          {{- with .internal.env }}
           {{- toYaml . | nindent 10 }}
           {{- end }}
-          {{- end }}
-        image:  {{ printf "%s:%s" (default "elasticsearch" .image.repository) ((default "8.17.0" .image.tag) | toString) }}
+        image:  {{ printf "%s:%s" (default "elasticsearch" .internal.image.repository) ((default "8.17.0" .internal.image.tag) | toString) }}
         imagePullPolicy: {{ $.Values.image.pullPolicy }}
         livenessProbe:
           tcpSocket:
             port: rest
-        resources:
-          limits:
-            cpu: 1000m
-          requests:
-            cpu: 100m
         ports:
           - name: elasticsearch
             containerPort: {{ default "9200" .config.port }}
@@ -100,12 +88,6 @@ spec:
         readinessProbe:
           tcpSocket:
             port: elasticsearch
-        {{- if .resources }}
-        {{- with .resources }}
-        resources:
-          {{- toYaml . | nindent 10 }}
-        {{- end }}
-        {{- end }}
         volumeMounts:
           - mountPath: /usr/share/elasticsearch/config
             name: liferay-elasticsearch-pvc
@@ -121,11 +103,6 @@ spec:
             subPath: plugins
       securityContext:
         fsGroup: 1000
-      # volumes:
-      #   - name: liferay-file-resources
-      #     configMap:
-      #       name: {{ include "liferay-helm.fullname" $ }}
-      #       optional: true
   updateStrategy:
     type: RollingUpdate
   volumeClaimTemplates:
@@ -135,7 +112,7 @@ spec:
       accessModes: ["ReadWriteOnce"]
       resources:
         requests:
-          storage: {{ default "1Gi" .storage}}
+          storage: {{ default "1Gi" .internal.storage}}
 ---
 apiVersion: v1
 kind: Service

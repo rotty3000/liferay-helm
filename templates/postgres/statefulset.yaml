@@ -1,4 +1,4 @@
-{{- if .Values.postgres.enabled }}
+{{- if .Values.postgres.internal.enabled }}
 {{- with .Values.postgres }}
 apiVersion: apps/v1
 kind: StatefulSet
@@ -8,7 +8,7 @@ metadata:
     app: {{ $.Chart.Name }}-postgres
     {{- include "liferay-helm.labels" $ | nindent 4 }}
 spec:
-  replicas: 1
+  replicas: {{ .internal.replicaCount }}
   selector:
     matchLabels:
       app: {{ $.Chart.Name }}-postgres
@@ -19,11 +19,6 @@ spec:
       labels:
         app: {{ $.Chart.Name }}-postgres
         {{- include "liferay-helm.labels" $ | nindent 8 }}
-        {{- if .podLabels }}
-        {{- with .podLabels }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
-        {{- end }}
     spec:
       containers:
       - name: {{ $.Chart.Name }}-postgres
@@ -36,12 +31,10 @@ spec:
             value: {{ .config.user }}
           - name: PGUSER
             value: {{ .config.user }}
-          {{- if .env }}
-          {{- with .env }}
+          {{- with .internal.env }}
           {{- toYaml . | nindent 10 }}
           {{- end }}
-          {{- end }}
-        image: {{ printf "%s:%s" (default "postgres" .image.repository) ((default "16" .image.tag) | toString) }}
+        image: {{ printf "%s:%s" (default "postgres" .internal.image.repository) ((default "16" .internal.image.tag) | toString) }}
         imagePullPolicy: {{ $.Values.image.pullPolicy }}
         livenessProbe:
           exec:
@@ -50,12 +43,6 @@ spec:
         - name: postgres
           containerPort: {{ default "5432" .config.port }}
           protocol: TCP
-        {{- if .resources }}
-        {{- with .resources }}
-        resources:
-          {{- toYaml . | nindent 10 }}
-        {{- end }}
-        {{- end }}
         readinessProbe:
           exec:
             command: ["sh", "-c", "pg_isready", "-U", "$POSTGRES_USER"]
@@ -71,7 +58,7 @@ spec:
       accessModes: [ "ReadWriteOnce" ]
       resources:
         requests:
-          storage: {{ default "1Gi" .storage}}
+          storage: {{ default "1Gi" .internal.storage}}
 ---
 apiVersion: v1
 kind: Service

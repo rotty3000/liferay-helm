@@ -58,19 +58,26 @@ storage: 1Gi
 
 # Setup integration with a PostgreSQL DB server.
 postgres:
-  # Configure the simplified Postgres deployment
+  # Configuration for simplified internal Postgres
   # (primarily used for local development)
-  enabled: false
+  internal:
+    enabled: false
 
-  # If enabled=true set the amount of storage requested by the PersistentVolumeClaim
-  storage: 1Gi
+    # Set the number of replicas (0 or 1 for now)
+    replicaCount: 0
 
-  # If enabled=true set the postgres image to use.
-  image:
-    repository: postgres
-    tag: 16
+    # Set the amount of storage requested by the PersistentVolumeClaim
+    storage: 1Gi
 
-  # Database configuration values
+    # Set the postgres image to use.
+    image:
+      repository: postgres
+      tag: 16
+
+    # Pass extra environment variables to the main container
+    env: {}
+
+  # Database configuration values (used with or without the embedded postgres)
   config:
     user: postgres
     password: postgres
@@ -81,20 +88,26 @@ postgres:
 
 # Setup integration with a PostgreSQL DB server.
 elasticsearch:
-  # Configure the simplified Postgres deployment
+  # Configuration for simplified internal Elasticsearch
   # (primarily used for local development)
-  enabled: false
-  replicaCount: 0
+  internal:
+    enabled: false
 
-  # If enabled=true set the amount of storage requested by the PersistentVolumeClaim
-  storage: 1Gi
+    # Set the number of replicas (0 or 1 for now)
+    replicaCount: 0
 
-  # If enabled=true set the postgres image to use.
-  image:
-    repository: elasticsearch
-    tag: "8.17.0"
+    # Set the amount of storage requested by the PersistentVolumeClaim
+    storage: 1Gi
 
-  # Database configuration values
+    # Set the postgres image to use.
+    image:
+      repository: elasticsearch
+      tag: "8.17.0"
+
+    # Pass extra environment variables to the main container
+    env: {}
+
+  # Database configuration values (used with or without the embedded elasticsearch)
   config:
     user: elasticsearch
     password: elasticsearch
