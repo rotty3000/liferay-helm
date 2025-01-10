@@ -63,7 +63,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ $.Chart.Name }}-postgres
+  name: {{ include "liferay-helm.fullname" $ }}-postgres
   labels:
     app: {{ $.Chart.Name }}-postgres
     {{- include "liferay-helm.labels" $ | nindent 4 }}
@@ -81,7 +81,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ $.Chart.Name }}-postgres-headless
+  name: {{ include "liferay-helm.fullname" $ }}-postgres-headless
   labels:
     app: {{ $.Chart.Name }}-postgres
     {{- include "liferay-helm.labels" $ | nindent 4 }}

@@ -117,7 +117,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ $.Chart.Name }}-elasticsearch
+  name: {{ include "liferay-helm.fullname" $ }}-elasticsearch
   labels:
     app: {{ $.Chart.Name }}-elasticsearch
     {{- include "liferay-helm.labels" $ | nindent 4 }}
@@ -135,7 +135,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ $.Chart.Name }}-elasticsearch-headless
+  name: {{ include "liferay-helm.fullname" $ }}-elasticsearch-headless
   labels:
     app: {{ $.Chart.Name }}-elasticsearch
     {{- include "liferay-helm.labels" $ | nindent 4 }}
