@@ -54,17 +54,46 @@ image:
 imagePullSecrets: []
 
 # Setup the amount of storage requests by the DXP PersistentVolumeClaim
-storage: 1Gi
+storage:
+  1Gi
 
-# Setup integration with a PostgreSQL DB server.
+  # Set the number of dxp replicas (0 or more)
+# See: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
+replicaCount: 0
+
+# Additional volumes on the main dxp container
+volumes: {}
+
+# Additional volumeMounts on the main dxp container
+volumeMounts:
+  {}
+  # - mountPath: /opt/liferay/osgi/config/foo.config
+  #   name: liferay-file-resources
+  #   subPath: foo.config
+  #   readOnly: true
+
+#### Setup dependent services
+
+#
+# PostgreSQL DB
+#
 postgres:
+  # Configuration values (used with or without the embedded postgres)
+  config:
+    user: postgres
+    password: postgres
+    database: lportal
+    host: liferay-helm-postgres
+    port: 5432
+    parameters: "useUnicode=true&characterEncoding=UTF-8&useFastDateParsing=false"
+
   # Configuration for simplified internal Postgres
   # (primarily used for local development)
   internal:
     enabled: false
 
-    # Set the number of replicas (0 or 1 for now)
-    replicaCount: 0
+    # Set the number of postgres replicas (0 or 1 for now)
+    replicaCount: 1
 
     # Set the amount of storage requested by the PersistentVolumeClaim
     storage: 1Gi
@@ -77,37 +106,11 @@ postgres:
     # Pass extra environment variables to the main container
     env: {}
 
-  # Database configuration values (used with or without the embedded postgres)
-  config:
-    user: postgres
-    password: postgres
-    database: lportal
-    host: liferay-helm-postgres
-    port: 5432
-    parameters: "useUnicode=true&characterEncoding=UTF-8&useFastDateParsing=false"
-
-# Setup integration with a PostgreSQL DB server.
+#
+# Elasticsearch
+#
 elasticsearch:
-  # Configuration for simplified internal Elasticsearch
-  # (primarily used for local development)
-  internal:
-    enabled: false
-
-    # Set the number of replicas (0 or 1 for now)
-    replicaCount: 0
-
-    # Set the amount of storage requested by the PersistentVolumeClaim
-    storage: 1Gi
-
-    # Set the postgres image to use.
-    image:
-      repository: elasticsearch
-      tag: "8.17.0"
-
-    # Pass extra environment variables to the main container
-    env: {}
-
-  # Database configuration values (used with or without the embedded elasticsearch)
+  # Configuration values (used with or without the embedded elasticsearch)
   config:
     user: elasticsearch
     password: elasticsearch
@@ -115,16 +118,35 @@ elasticsearch:
     host: liferay-helm-elasticsearch
     port: 9200
 
+  # Configuration for simplified internal Elasticsearch
+  # (primarily used for local development)
+  internal:
+    enabled: false
+
+    # Set the number of elasticsearch replicas (0 or 1 for now)
+    replicaCount: 0
+
+    # Set the amount of storage requested by the PersistentVolumeClaim
+    storage: 1Gi
+
+    # Set the elasticsearch image to use.
+    image:
+      repository: elasticsearch
+      tag: "8.17.0"
+
+    # Pass extra environment variables to the main container
+    env: {}
+
 ################################################################################
 #### Less common fine tuning options ###########################################
 ################################################################################
 
 # This is for setting the node selection constraints.
-# For more information checkout: https://kubernetes.io/docs/tasks/configure-pod-container/assign-pods-nodes-using-node-affinity/
+# See: https://kubernetes.io/docs/tasks/configure-pod-container/assign-pods-nodes-using-node-affinity/
 affinity: {}
 
 # This section is for setting up autoscaling.
-# For more information checkout: https://kubernetes.io/docs/concepts/workloads/autoscaling/
+# See: https://kubernetes.io/docs/concepts/workloads/autoscaling/
 autoscaling:
   enabled: false
   minReplicas: 1
@@ -137,23 +159,19 @@ nameOverride: ""
 fullnameOverride: ""
 
 # This is the simplest form of no selection constraint.
-# For more information checkout: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
+# See: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
 nodeSelector: {}
 
 # This is for setting Kubernetes Annotations to a Pod.
-# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+# See: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
 podAnnotations: {}
 
 # This is for setting Kubernetes Labels to a Pod.
-# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+# See: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
 podLabels: {}
 
-# This will set the replicaset count.
-# For more information checkout: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
-replicaCount: 0
-
 # This is for setting the resource requests and limits of the pods.
-# For more information checkout: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+# See: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
 resources: {}
 
 # This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
@@ -176,16 +194,5 @@ serviceAccount:
   name: ""
 
 # Tolerations allow the scheduler to schedule pods with matching taints.
-# For more information checkout: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
+# See: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
 tolerations: []
-
-# Additional volumes on the output StatefulSet definition.
-volumes: {}
-
-# Additional volumeMounts on the output StatefulSet definition.
-volumeMounts:
-  {}
-  # - mountPath: /opt/liferay/osgi/config/foo.config
-  #   name: liferay-file-resources
-  #   subPath: foo.config
-  #   readOnly: true
