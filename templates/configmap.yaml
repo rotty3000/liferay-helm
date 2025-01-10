@@ -22,6 +22,7 @@ data:
     jdbc.default.password={{ .password }}
     {{- end }}
 
+    index.on.startup=true
     notification.email.template.enabled=false
     passwords.default.policy.change.required=false
     passwords.default.policy.lockout.duration=3600
@@ -66,9 +67,12 @@ data:
 
   com.liferay.portal.search.elasticsearch7.configuration.ElasticsearchConfiguration.config: |
     {{- with .Values.elasticsearch.config }}
-    clusterName="{{ .database }}"
+    clusterName="{{ .clusterName }}"
+    # authenticationEnabled=b"true"
+    indexNamePrefix="liferay-"
     networkHostAddresses=["{{ default (printf "%s-elasticsearch" (include "liferay-helm.fullname" $)) .host }}:{{ .port }}"]
     operationMode="REMOTE"
+    password="{{ .password }}"
     {{- end }}
 
   {{- toYaml .Values.configmap.data | nindent 2 }}
