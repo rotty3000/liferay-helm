@@ -31,6 +31,7 @@ spec:
       initContainers:
         - name: {{ .Chart.Name }}-pre-populate-dxp-data
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           command: ["/bin/sh","-c"]
           args:
             - |
@@ -43,6 +44,34 @@ spec:
           volumeMounts:
           - mountPath: /temp
             name: liferay-working-data-pvc
+        - name: {{ .Chart.Name }}-wait-on-services
+          image: busybox:latest
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/bin/sh","-c"]
+          args:
+            - |
+              trap 'echo "Received signal to Terminate"; exit 0' SIGINT SIGTERM
+
+              {{- if .Values.postgres.internal.enabled }}
+              until nc -vz $LIFERAY_HELM_POSTGRES_SERVICE_HOST $LIFERAY_HELM_POSTGRES_SERVICE_PORT_POSTGRES; do
+                echo "Waiting for Postgres service"
+                sleep 2
+              done
+              {{- end }}
+
+              {{- if .Values.minio.internal.enabled }}
+              until nc -vz $LIFERAY_HELM_MINIO_SERVICE_HOST $LIFERAY_HELM_MINIO_SERVICE_PORT_API; do
+                echo "Waiting for S3 service"
+                sleep 2
+              done
+              {{- end }}
+
+              {{- if .Values.elasticsearch.internal.enabled }}
+              until nc -vz $LIFERAY_HELM_ELASTICSEARCH_SERVICE_HOST $LIFERAY_HELM_ELASTICSEARCH_SERVICE_PORT_ELASTICSEARCH; do
+                echo "Waiting for Elasticsearch service"
+                sleep 2
+              done
+              {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           {{- with .Values.env }}
