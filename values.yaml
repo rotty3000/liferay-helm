@@ -135,10 +135,10 @@ elasticsearch:
     env: {}
 
 #
-# MinIO (S3 Object storage)
+# S3 Object storage (MinIO)
 #
-minio:
-  # Configuration values (used with or without the embedded elasticsearch)
+s3:
+  # Configuration values (used with or without the embedded MinIO)
   config:
     user: minio
     password: miniominio

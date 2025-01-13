@@ -59,7 +59,7 @@ spec:
               done
               {{- end }}
 
-              {{- if .Values.minio.internal.enabled }}
+              {{- if .Values.s3.internal.enabled }}
               until nc -vz $LIFERAY_HELM_MINIO_SERVICE_HOST $LIFERAY_HELM_MINIO_SERVICE_PORT_API; do
                 echo "Waiting for S3 service"
                 sleep 2

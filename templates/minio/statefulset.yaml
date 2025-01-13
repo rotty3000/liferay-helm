@@ -1,5 +1,5 @@
-{{- if .Values.minio.internal.enabled }}
-{{- with .Values.minio }}
+{{- if .Values.s3.internal.enabled }}
+{{- with .Values.s3 }}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -30,7 +30,7 @@ spec:
           {{- range .paths }}
           {{- if eq .backendServicePortName "console" }}
           - name: MINIO_BROWSER_REDIRECT_URL
-            value: {{ printf "%s://%s/" (default "http" $.Values.minio.config.scheme) $host }}
+            value: {{ printf "%s://%s/" (default "http" $.Values.s3.config.scheme) $host }}
           {{- end }}
           {{- end }}
           {{- end }}

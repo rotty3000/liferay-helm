@@ -23,20 +23,20 @@ data:
     {{- end }}
 
     #
-    # Amazon S3 (uses MinIO when `minio.internal.enabled=true`)
+    # Amazon S3 (uses MinIO when `s3.internal.enabled=true`)
     #
     dl.store.impl=com.liferay.portal.store.s3.S3Store
-    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_accessKey={{ .Values.minio.config.user | quote }}
-    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_bucketName={{ .Values.minio.config.buckets | quote }}
-    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_connectionProtocol={{ .Values.minio.config.scheme | upper | quote }}
-    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_connectionTimeout=i{{ .Values.minio.config.connectionTimeout | quote }}
-    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_corePoolSize=i{{ .Values.minio.config.corePoolSize | quote }}
-    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_httpClientMaxConnections=i{{ .Values.minio.config.httpClientMaxConnections | quote }}
-    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_httpClientMaxErrorRetry=B{{ .Values.minio.config.httpClientMaxErrorRetry | quote }}
-    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_s3Endpoint="{{ default (printf "%s-minio" (include "liferay-helm.fullname" $)) .Values.minio.config.host }}:{{ .Values.minio.config.ports.api }}"
-    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_s3PathStyle=B{{ .Values.minio.config.pathStyle | quote }}
-    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_s3Region={{ .Values.minio.config.region | quote }}
-    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_secretKey={{ .Values.minio.config.password | quote }}
+    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_accessKey={{ .Values.s3.config.user | quote }}
+    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_bucketName={{ .Values.s3.config.buckets | quote }}
+    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_connectionProtocol={{ .Values.s3.config.scheme | upper | quote }}
+    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_connectionTimeout=i{{ .Values.s3.config.connectionTimeout | quote }}
+    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_corePoolSize=i{{ .Values.s3.config.corePoolSize | quote }}
+    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_httpClientMaxConnections=i{{ .Values.s3.config.httpClientMaxConnections | quote }}
+    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_httpClientMaxErrorRetry=B{{ .Values.s3.config.httpClientMaxErrorRetry | quote }}
+    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_s3Endpoint="{{ default (printf "%s-minio" (include "liferay-helm.fullname" $)) .Values.s3.config.host }}:{{ .Values.s3.config.ports.api }}"
+    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_s3PathStyle=B{{ .Values.s3.config.pathStyle | quote }}
+    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_s3Region={{ .Values.s3.config.region | quote }}
+    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_secretKey={{ .Values.s3.config.password | quote }}
 
     database.indexes.update.on.startup=true
     #index.on.startup=true
