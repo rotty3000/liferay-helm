@@ -56,7 +56,7 @@ storage:
 
   # Set the number of dxp replicas (0 or more)
 # See: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
-replicaCount: 0
+replicaCount: 1
 
 # Additional volumes on the main dxp container
 volumes: {}
@@ -87,7 +87,7 @@ postgres:
   # Configuration for simplified internal Postgres
   # (primarily used for local development)
   internal:
-    enabled: false
+    enabled: true
 
     # Set the number of postgres replicas (0 or 1 for now)
     replicaCount: 1
@@ -118,10 +118,10 @@ elasticsearch:
   # Configuration for simplified internal Elasticsearch
   # (primarily used for local development)
   internal:
-    enabled: false
+    enabled: true
 
     # Set the number of elasticsearch replicas (0 or 1 for now)
-    replicaCount: 0
+    replicaCount: 1
 
     # Set the amount of storage requested by the PersistentVolumeClaim
     storage: 1Gi
@@ -158,10 +158,10 @@ minio:
   # Configuration for simplified internal MinIO
   # (primarily used for local development)
   internal:
-    enabled: false
+    enabled: true
 
     # Set the number of minio replicas (0 or 1 for now)
-    replicaCount: 0
+    replicaCount: 1
 
     # Set the amount of storage requested by the PersistentVolumeClaim
     storage: 1Gi
