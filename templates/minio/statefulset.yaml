@@ -1,0 +1,176 @@
+{{- if .Values.minio.internal.enabled }}
+{{- with .Values.minio }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "liferay-helm.fullname" $ }}-minio
+  labels:
+    app: {{ $.Chart.Name }}-minio
+    {{- include "liferay-helm.labels" $ | nindent 4 }}
+spec:
+  replicas: {{ .internal.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ $.Chart.Name }}-minio
+      {{- include "liferay-helm.selectorLabels" $ | nindent 6 }}
+  serviceName: {{ include "liferay-helm.fullname" $ }}-minio
+  template:
+    metadata:
+      labels:
+        app: {{ $.Chart.Name }}-minio
+        {{- include "liferay-helm.labels" $ | nindent 8 }}
+    spec:
+      containers:
+      - name: {{ $.Chart.Name }}-minio
+        env:
+          - name: MINIO_API_PORT_NUMBER
+            value: {{ default "9000" .config.ports.api | quote }}
+          {{- range .internal.ingress.hosts }}
+          {{- $host := .host }}
+          {{- range .paths }}
+          {{- if eq .backendServicePortName "console" }}
+          - name: MINIO_BROWSER_REDIRECT_URL
+            value: {{ printf "%s://%s/" (default "http" $.Values.minio.config.scheme) $host }}
+          {{- end }}
+          {{- end }}
+          {{- end }}
+          - name: MINIO_CONSOLE_PORT_NUMBER
+            value: {{ default "9001" .config.ports.console | quote }}
+          - name: MINIO_DEFAULT_BUCKETS
+            value: {{ .config.buckets }}
+          - name: MINIO_ROOT_PASSWORD
+            value: {{ .config.password }}
+          - name: MINIO_ROOT_USER
+            value: {{ .config.user }}
+          - name: MINIO_SCHEME
+            value: {{ default "http" .config.scheme }}
+          - name: MINIO_SERVER_URL
+            value: "http://localhost:9000"
+          {{- with .internal.env }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        image: {{ printf "%s:%s" (default "bitnami/minio" .internal.image.repository) ((default "2024" .internal.image.tag) | toString) }}
+        imagePullPolicy: {{ $.Values.image.pullPolicy }}
+        livenessProbe:
+          httpGet:
+            path: /minio/health/live
+            port: {{ default "9000" .config.ports.api }}
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 10
+          successThreshold: 1
+          failureThreshold: 3
+        ports:
+        - name: api
+          containerPort: {{ default "9000" .config.ports.api }}
+          protocol: TCP
+        - name: console
+          containerPort: {{ default "9001" .config.ports.console }}
+          protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /minio/health/ready
+            port: {{ default "9000" .config.ports.api }}
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 10
+          successThreshold: 1
+          failureThreshold: 3
+        volumeMounts:
+        - mountPath: /bitnami/minio/data
+          name: liferay-minio-pvc
+  updateStrategy:
+    type: RollingUpdate
+  volumeClaimTemplates:
+  - metadata:
+      name: liferay-minio-pvc
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: {{ default "1Gi" .internal.storage}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "liferay-helm.fullname" $ }}-minio
+  labels:
+    app: {{ $.Chart.Name }}-minio
+    {{- include "liferay-helm.labels" $ | nindent 4 }}
+spec:
+  selector:
+    app: {{ $.Chart.Name }}-minio
+    {{- include "liferay-helm.labels" $ | nindent 4 }}
+  ports:
+  - name: api
+    port: {{ .config.ports.api }}
+    targetPort: api
+    protocol: TCP
+  - name: console
+    port: {{ .config.ports.console }}
+    targetPort: console
+    protocol: TCP
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "liferay-helm.fullname" $ }}-minio-headless
+  labels:
+    app: {{ $.Chart.Name }}-minio
+    {{- include "liferay-helm.labels" $ | nindent 4 }}
+spec:
+  clusterIP: None # This is what makes it headless
+  selector:
+    app: {{ $.Chart.Name }}-minio
+    {{- include "liferay-helm.labels" $ | nindent 4 }}
+  ports:
+  - name: api
+    port: {{ .config.ports.api }}
+    targetPort: api
+    protocol: TCP
+---
+{{- if .internal.ingress.enabled -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "liferay-helm.fullname" $ }}-minio
+  labels:
+    app: {{ $.Chart.Name }}-minio
+    {{- include "liferay-helm.labels" $ | nindent 4 }}
+spec:
+  {{- with .internal.ingress.className }}
+  ingressClassName: {{ . }}
+  {{- end }}
+  {{- if .internal.ingress.tls }}
+  tls:
+    {{- range .internal.ingress.tls }}
+    - hosts:
+        {{- range .hosts }}
+        - {{ . | quote }}
+        {{- end }}
+      secretName: {{ .secretName }}
+    {{- end }}
+  {{- end }}
+  rules:
+    {{- range .internal.ingress.hosts }}
+    - host: {{ .host | quote }}
+      http:
+        paths:
+          {{- range .paths }}
+          - path: {{ .path }}
+            {{- with .pathType }}
+            pathType: {{ . }}
+            {{- end }}
+            backend:
+              service:
+                name: {{ include "liferay-helm.fullname" $ }}-minio
+                port:
+                  name: {{ .backendServicePortName }}
+          {{- end }}
+    {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

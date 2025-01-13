@@ -28,10 +28,7 @@ configmap:
 ingress:
   enabled: true
   className: ""
-  annotations:
-    {}
-    # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
+  annotations: {}
   hosts:
     - host: "*.dxp.docker.localhost"
       paths:
@@ -136,6 +133,61 @@ elasticsearch:
 
     # Pass extra environment variables to the main container
     env: {}
+
+#
+# MinIO (S3 Object storage)
+#
+minio:
+  # Configuration values (used with or without the embedded elasticsearch)
+  config:
+    user: minio
+    password: miniominio
+    buckets: doclib
+    host: liferay-helm-minio
+    scheme: http
+    ports:
+      api: 9000
+      console: 9001
+
+  # Configuration for simplified internal MinIO
+  # (primarily used for local development)
+  internal:
+    enabled: false
+
+    # Set the number of minio replicas (0 or 1 for now)
+    replicaCount: 0
+
+    # Set the amount of storage requested by the PersistentVolumeClaim
+    storage: 1Gi
+
+    # Set the minio image to use.
+    image:
+      repository: bitnami/minio
+      tag: "2024"
+
+    # Pass extra environment variables to the main container
+    env: {}
+
+    # This block is for enabling access to the MinIO management console.
+    ingress:
+      enabled: true
+      className: ""
+      annotations: {}
+      hosts:
+        - host: "api.minio.docker.localhost"
+          paths:
+            - path: /
+              pathType: ImplementationSpecific
+              backendServicePortName: api
+        - host: "console.minio.docker.localhost"
+          paths:
+            - path: /
+              pathType: ImplementationSpecific
+              backendServicePortName: console
+      tls: []
+      #  - secretName: chart-example-tls
+      #    hosts:
+      #      - chart-example.local
 
 ################################################################################
 #### Less common fine tuning options ###########################################
