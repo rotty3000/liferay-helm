@@ -133,6 +133,9 @@ spec:
             - mountPath: /opt/liferay/osgi/state
               name: liferay-working-data-pvc
               subPath: osgi/state
+            - mountPath: /opt/liferay/reports
+              name: liferay-working-data-pvc
+              subPath: liferay/reports
             - mountPath: /opt/liferay/routes
               name: liferay-working-data-pvc
               subPath: liferay/routes
