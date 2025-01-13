@@ -6,6 +6,11 @@
 #### Commonly used variables ###################################################
 ################################################################################
 
+config:
+  password: test
+  user: test
+  mainVirtualHost: main.dxp.docker.localhost
+
 configmap:
   # Annotations to add to the configmap
   annotations: {}
@@ -13,13 +18,6 @@ configmap:
   data:
     portal-custom.properties: |
       include-and-override=portal-developer.properties
-
-    LIFERAY_DEFAULT_PERIOD_ADMIN_PERIOD_PASSWORD: testhelm
-    LIFERAY_DEFAULT_PERIOD_ADMIN_PERIOD_SCREEN_PERIOD_NAME: testhelm
-    LIFERAY_DEFAULT_PERIOD_ADMIN_PERIOD_EMAIL_PERIOD_ADDRESS_PERIOD_PREFIX: testhelm
-    LIFERAY_DEFAULT_PERIOD_ADMIN_PERIOD_FIRST_PERIOD_NAME: "Test"
-    LIFERAY_DEFAULT_PERIOD_ADMIN_PERIOD_MIDDLE_PERIOD_NAME: ""
-    LIFERAY_DEFAULT_PERIOD_ADMIN_PERIOD_LAST_PERIOD_NAME: "Helm"
 
     # license.xml: |
     #   <license>

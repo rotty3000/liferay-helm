@@ -26,17 +26,19 @@ data:
     # Amazon S3 (uses MinIO when `s3.internal.enabled=true`)
     #
     dl.store.impl=com.liferay.portal.store.s3.S3Store
-    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_accessKey={{ .Values.s3.config.user | quote }}
-    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_bucketName={{ .Values.s3.config.buckets | quote }}
-    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_connectionProtocol={{ .Values.s3.config.scheme | upper | quote }}
-    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_connectionTimeout=i{{ .Values.s3.config.connectionTimeout | quote }}
-    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_corePoolSize=i{{ .Values.s3.config.corePoolSize | quote }}
-    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_httpClientMaxConnections=i{{ .Values.s3.config.httpClientMaxConnections | quote }}
-    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_httpClientMaxErrorRetry=B{{ .Values.s3.config.httpClientMaxErrorRetry | quote }}
-    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_s3Endpoint="{{ default (printf "%s-minio" (include "liferay-helm.fullname" $)) .Values.s3.config.host }}:{{ .Values.s3.config.ports.api }}"
-    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_s3PathStyle=B{{ .Values.s3.config.pathStyle | quote }}
-    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_s3Region={{ .Values.s3.config.region | quote }}
-    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_secretKey={{ .Values.s3.config.password | quote }}
+    {{- with .Values.s3.config }}
+    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_accessKey={{ .user | quote }}
+    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_bucketName={{ .buckets | quote }}
+    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_connectionProtocol={{ .scheme | upper | quote }}
+    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_connectionTimeout=i{{ .connectionTimeout | quote }}
+    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_corePoolSize=i{{ .corePoolSize | quote }}
+    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_httpClientMaxConnections=i{{ .httpClientMaxConnections | quote }}
+    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_httpClientMaxErrorRetry=B{{ .httpClientMaxErrorRetry | quote }}
+    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_s3Endpoint="{{ default (printf "%s-minio" (include "liferay-helm.fullname" $)) .host }}:{{ .ports.api }}"
+    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_s3PathStyle=B{{ .pathStyle | quote }}
+    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_s3Region={{ .region | quote }}
+    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_secretKey={{ .password | quote }}
+    {{- end }}
 
     database.indexes.update.on.startup=true
     #index.on.startup=true
@@ -61,10 +63,13 @@ data:
     web.server.https.port=443
     web.server.protocol=http
 
-    company.default.name=Liferay DXP Main
-    #company.default.web.id=main.dxp.docker.localhost
-    company.default.virtual.host.name=main.dxp.docker.localhost
-    company.default.virtual.host.mail.domain=main.dxp.docker.localhost
+    default.admin.password={{ .Values.config.password }}
+    default.admin.screen.name={{ .Values.config.user }}
+    default.admin.email.address.prefix={{ .Values.config.user }}
+    company.default.name=Liferay DXP
+    company.default.web.id={{ .Values.config.mainVirtualHost }}
+    company.default.virtual.host.name={{ .Values.config.mainVirtualHost }}
+    company.default.virtual.host.mail.domain={{ .Values.config.mainVirtualHost }}
     company.default.virtual.host.sync.on.startup=true
 
     module.framework.properties.org.apache.felix.configadmin.plugin.interpolation.secretsdir=/opt/liferay/osgi/configs,/var/run/secrets/kubernetes.io/serviceaccount
@@ -92,12 +97,11 @@ data:
 
   com.liferay.portal.search.elasticsearch7.configuration.ElasticsearchConfiguration.config: |
     {{- with .Values.elasticsearch.config }}
-    clusterName="{{ .clusterName }}"
-    # authenticationEnabled=b"true"
+    clusterName={{ .clusterName | quote }}
     indexNamePrefix="liferay-"
     networkHostAddresses=["{{ default (printf "%s-elasticsearch" (include "liferay-helm.fullname" $)) .host }}:{{ .port }}"]
     operationMode="REMOTE"
-    password="{{ .password }}"
+    password={{ .password | quote }}
     {{- end }}
 
   {{- toYaml .Values.configmap.data | nindent 2 }}
