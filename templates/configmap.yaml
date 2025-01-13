@@ -22,6 +22,22 @@ data:
     jdbc.default.password={{ .password }}
     {{- end }}
 
+    #
+    # Amazon S3 (uses MinIO when `minio.internal.enabled=true`)
+    #
+    dl.store.impl=com.liferay.portal.store.s3.S3Store
+    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_accessKey={{ .Values.minio.config.user | quote }}
+    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_bucketName={{ .Values.minio.config.buckets | quote }}
+    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_connectionProtocol={{ .Values.minio.config.scheme | upper | quote }}
+    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_connectionTimeout=i{{ .Values.minio.config.connectionTimeout | quote }}
+    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_corePoolSize=i{{ .Values.minio.config.corePoolSize | quote }}
+    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_httpClientMaxConnections=i{{ .Values.minio.config.httpClientMaxConnections | quote }}
+    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_httpClientMaxErrorRetry=B{{ .Values.minio.config.httpClientMaxErrorRetry | quote }}
+    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_s3Endpoint="{{ default (printf "%s-minio" (include "liferay-helm.fullname" $)) .Values.minio.config.host }}:{{ .Values.minio.config.ports.api }}"
+    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_s3PathStyle=B{{ .Values.minio.config.pathStyle | quote }}
+    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_s3Region={{ .Values.minio.config.region | quote }}
+    configuration.override.com.liferay.portal.store.s3.configuration.S3StoreConfiguration_secretKey={{ .Values.minio.config.password | quote }}
+
     index.on.startup=true
     notification.email.template.enabled=false
     passwords.default.policy.change.required=false
@@ -47,6 +63,10 @@ data:
     company.default.virtual.host.sync.on.startup=true
 
     module.framework.properties.org.apache.felix.configadmin.plugin.interpolation.secretsdir=/opt/liferay/osgi/configs,/var/run/secrets/kubernetes.io/serviceaccount
+
+    configuration.override.com.liferay.portal.component.blacklist.internal.configuration.ComponentBlacklistConfiguration_blacklistComponentNames=[\
+      "com.liferay.portal.store.s3.IBMS3Store"\
+    ]
 
     # As a System admin, I would like to use Site/Instance OSGi configurations across different systems
     feature.flag.LPS-155284=true

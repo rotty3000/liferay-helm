@@ -144,7 +144,13 @@ minio:
     password: miniominio
     buckets: doclib
     host: liferay-helm-minio
+    region: us-west-1
     scheme: http
+    corePoolSize: 3
+    connectionTimeout: 20
+    httpClientMaxConnections: 10
+    httpClientMaxErrorRetry: 3
+    pathStyle: true
     ports:
       api: 9000
       console: 9001

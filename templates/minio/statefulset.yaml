@@ -38,6 +38,8 @@ spec:
             value: {{ default "9001" .config.ports.console | quote }}
           - name: MINIO_DEFAULT_BUCKETS
             value: {{ .config.buckets }}
+          - name: MINIO_REGION
+            value: {{ .config.region }}
           - name: MINIO_ROOT_PASSWORD
             value: {{ .config.password }}
           - name: MINIO_ROOT_USER
