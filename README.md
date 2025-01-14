@@ -91,7 +91,11 @@ However, to uninstall the chart simply do:
 helm uninstall -n liferay-system liferay-helm
 ```
 
-To also remove all the persistent volume claims (which destroys all the data) simply do:
+### Starting from Scratch
+
+Starting from scratch involves also removing all the storage volumes.
+
+To remove all the persistent volumes (which destroys all the data) simply do:
 
 ```shell
 k delete -n liferay-system persistentvolumeclaims \
