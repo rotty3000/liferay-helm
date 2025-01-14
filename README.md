@@ -51,7 +51,7 @@ There are 3 preset addresses:
 
 - DXP: http://main.dxp.docker.localhost
 
-  The default user name and password are `testhelm` : `testhelm`.
+  The default user name and password are `test@main.dxp.docker.localhost` : `test`.
 
 - MinIO (S3 Server):
 
