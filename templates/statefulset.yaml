@@ -53,21 +53,21 @@ spec:
               trap 'echo "Received signal to Terminate"; exit 0' SIGINT SIGTERM
 
               {{- if .Values.postgres.internal.enabled }}
-              until nc -vz $LIFERAY_HELM_POSTGRES_SERVICE_HOST $LIFERAY_HELM_POSTGRES_SERVICE_PORT_POSTGRES; do
+              until nc -vz {{ default (printf "%s-postgres" (include "liferay-helm.fullname" $)) .Values.postgres.config.host }} {{ .Values.postgres.config.port }}; do
                 echo "Waiting for Postgres service"
                 sleep 2
               done
               {{- end }}
 
               {{- if .Values.s3.internal.enabled }}
-              until nc -vz $LIFERAY_HELM_MINIO_SERVICE_HOST $LIFERAY_HELM_MINIO_SERVICE_PORT_API; do
+              until nc -vz {{ default (printf "%s-minio" (include "liferay-helm.fullname" $)) .Values.s3.config.host }} {{ .Values.s3.config.ports.api }}; do
                 echo "Waiting for S3 service"
                 sleep 2
               done
               {{- end }}
 
               {{- if .Values.elasticsearch.internal.enabled }}
-              until nc -vz $LIFERAY_HELM_ELASTICSEARCH_SERVICE_HOST $LIFERAY_HELM_ELASTICSEARCH_SERVICE_PORT_ELASTICSEARCH; do
+              until nc -vz {{ default (printf "%s-elasticsearch" (include "liferay-helm.fullname" $)) .Values.elasticsearch.config.host }} {{ .Values.elasticsearch.config.port }}; do
                 echo "Waiting for Elasticsearch service"
                 sleep 2
               done
