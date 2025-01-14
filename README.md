@@ -80,3 +80,31 @@ e.g. create a new host using:
 - **Virtual Host**: `two.dxp.docker.localhost`
 - **Mail Domain**: `two.dxp.docker.localhost`
 - Wait for completion then access the virtual instance at http://two.dxp.docker.localhost
+
+## Uninstallation
+
+If all you want to do is update the chart, simply execute the install instruction above.
+
+However, to uninstall the chart simply do:
+
+```shell
+helm uninstall -n liferay-system liferay-helm
+```
+
+To also remove all the persistent volume claims (which destroys all the data) simply do:
+
+```shell
+k delete -n liferay-system persistentvolumeclaims \
+  liferay-elasticsearch-pvc-liferay-helm-elasticsearch-0 \
+  liferay-minio-pvc-liferay-helm-minio-0 \
+  liferay-postgres-pvc-liferay-helm-postgres-0 \
+  liferay-working-data-pvc-liferay-helm-0
+```
+
+## Basic Observation of the Chart
+
+If you want to watch the progress of the chart the following simple command works well:
+
+```shell
+watch -n .5 kubectl get -n liferay-system all,svc,cm,pvc,ingress
+```
