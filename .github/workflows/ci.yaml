@@ -43,7 +43,6 @@ jobs:
           helm version
 
       - name: Calculate Chart Version
-        if: ${{ env.PUBLISH == 'true' }}
         id: calculate-chart-version
         run: |
           # This is the tag name
@@ -58,11 +57,9 @@ jobs:
           echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Package the Helm Chart
-        if: ${{ env.PUBLISH == 'true' }}
         run: |
           helm package --version ${{ steps.calculate-chart-version.outputs.REPOSITORY }} . -d ./dist
 
       - name: Update Helm Index
-        if: ${{ env.PUBLISH == 'true' }}
         run: |
           helm repo index ./dist
