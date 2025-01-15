@@ -1,6 +1,6 @@
-# liferay-helm
+# A Helm Chart for Liferay DXP
 
-A Helm Chart for Liferay DXP
+[![CI](https://github.com/rotty3000/liferay-helm/actions/workflows/ci.yaml/badge.svg?branch=main)](https://github.com/rotty3000/liferay-helm/actions/workflows/ci.yaml)
 
 ## Install the Chart
 
