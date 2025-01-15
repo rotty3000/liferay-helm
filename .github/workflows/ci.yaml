@@ -23,6 +23,7 @@ env:
   CHARTS_TMP_DIR: dist
   LC_ALL: en_US.UTF-8
   PUBLISH: "false"
+  SOURCE_DIR: "."
 
 defaults:
   run:
@@ -94,6 +95,7 @@ jobs:
           mkdir ${CHARTS_TMP_DIR}
           helm package --version ${CHART_VERSION} -d ${CHARTS_TMP_DIR} .
           echo "CHARTS_TMP_DIR=$(realpath $CHARTS_TMP_DIR)" >> ${GITHUB_ENV}
+          echo "SOURCE_DIR$(realpath $SOURCE_DIR)" >> ${GITHUB_ENV}
 
       - name: Log in to registry with Helm
         if: ${{ env.PUBLISH == 'true' }}
@@ -137,10 +139,18 @@ jobs:
           helm repo index ${CHARTS_TMP_DIR} --url ${CHARTS_URL} --merge "${INDEX_DIR}/index.yaml"
           mv -f ${CHARTS_TMP_DIR}/index.yaml ${INDEX_DIR}/index.yaml
 
+          # Rewrite the urls into the correct OCI format for the index
           yq -i '.entries.liferay-helm[].urls[] |= sub("-(\d+\.\d+\.\d+)\.tgz", ":$1")' ${INDEX_DIR}/index.yaml
 
-          git add ${INDEX_DIR}/index.yaml
+          # Copy the markdown files to the gh-pages branch
+          find ${SOURCE_DIR} -name "*.md" -exec cp -f '{}' . \;
+
+          # Add all changed files to the index
+          git add --all
+
+          # Diff for observability
           git diff --cached
+
           git commit -m "Publish $charts"
           git push origin ${PUBLISH_BRANCH}
 
