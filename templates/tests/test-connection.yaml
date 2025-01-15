@@ -14,8 +14,16 @@ spec:
       args:
         - |
           trap 'echo "Received signal to Terminate"; exit 0' SIGINT SIGTERM
+          START=$(date +%s)
 
+          # Only wait for 5 minutes and then fail
           until nc -vz -w 2 {{ include "liferay-helm.fullname" . }} {{ .Values.service.port }}; do
+            NOW=$(date +%s)
+            SPAN=$(($NOW - $START))
+            if [ $SPAN -gt 300 ]; then
+              echo "DXP Service did not arrive within expected time (5 mins)."
+              exit 1
+            fi
             echo "Waiting for DXP service"
             sleep 2
           done
