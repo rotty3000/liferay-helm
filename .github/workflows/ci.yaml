@@ -51,7 +51,7 @@ jobs:
           # This is the version
           VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
           [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
-          [ "$VERSION" == "main" ] && VERSION=latest
+          [ "$VERSION" == "main" ] && VERSION="0.0.0"
 
           echo VERSION=$VERSION
           echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
