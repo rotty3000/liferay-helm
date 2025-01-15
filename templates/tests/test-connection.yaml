@@ -8,8 +8,15 @@ metadata:
     "helm.sh/hook": test
 spec:
   containers:
-    - name: wget
-      image: busybox
-      command: ['wget']
-      args: ['{{ include "liferay-helm.fullname" . }}:{{ .Values.service.port }}']
+    - name: test-connection
+      image: busybox:latest
+      command: ["/bin/sh","-c"]
+      args:
+        - |
+          trap 'echo "Received signal to Terminate"; exit 0' SIGINT SIGTERM
+
+          until nc -vz -w 2 {{ include "liferay-helm.fullname" . }} {{ .Values.service.port }}; do
+            echo "Waiting for DXP service"
+            sleep 2
+          done
   restartPolicy: Never

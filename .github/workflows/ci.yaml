@@ -22,7 +22,7 @@ env:
   CHART_VERSION: "0.0.0"
   CHARTS_TMP_DIR: dist
   LC_ALL: en_US.UTF-8
-  PUBLISH: ${{ (github.repository == 'rotty3000/liferay-helm') && startsWith(github.ref, 'refs/tags/') && (github.event_name != 'pull_request') }}
+  PUBLISH: "false"
 
 defaults:
   run:
@@ -67,9 +67,11 @@ jobs:
           kind create cluster
 
       - name: Run Helm Test
+        id: helm-test
         run: |
           helm upgrade -i liferay-helm .
-          helm test liferay-helm
+          helm test liferay-helm && \
+            echo "PUBLISH=${{ (github.repository == 'rotty3000/liferay-helm') && startsWith(github.ref, 'refs/tags/') && (github.event_name != 'pull_request') }}" >> ${GITHUB_ENV}
 
       - name: Calculate Chart Version
         if: ${{ env.PUBLISH == 'true' }}
