@@ -4,12 +4,16 @@ on:
   push:
     branches-ignore:
       - "dependabot/**"
+      - "gh-pages/**"
     paths:
       - "**"
       - "!docs/**"
     tags:
       - "v*"
   pull_request:
+    branches-ignore:
+      - "dependabot/**"
+      - "gh-pages/**"
     paths:
       - "**"
       - "!docs/**"
