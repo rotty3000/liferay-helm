@@ -95,7 +95,7 @@ jobs:
           mkdir ${CHARTS_TMP_DIR}
           helm package --version ${CHART_VERSION} -d ${CHARTS_TMP_DIR} .
           echo "CHARTS_TMP_DIR=$(realpath $CHARTS_TMP_DIR)" >> ${GITHUB_ENV}
-          echo "SOURCE_DIR$(realpath $SOURCE_DIR)" >> ${GITHUB_ENV}
+          echo "SOURCE_DIR=$(realpath $SOURCE_DIR)" >> ${GITHUB_ENV}
 
       - name: Log in to registry with Helm
         if: ${{ env.PUBLISH == 'true' }}
