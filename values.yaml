@@ -80,6 +80,7 @@ postgres:
     database: lportal
     host: liferay-helm-postgres
     port: 5432
+    # JDBC Connection string parameters
     parameters: "useUnicode=true&characterEncoding=UTF-8&useFastDateParsing=false"
 
   # Configuration for simplified internal Postgres
