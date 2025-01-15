@@ -58,7 +58,7 @@ jobs:
 
       - name: Package the Helm Chart
         run: |
-          helm package --version ${{ steps.calculate-chart-version.outputs.REPOSITORY }} . -d ./dist
+          helm package --version ${{ steps.calculate-chart-version.outputs.VERSION }} . -d ./dist
 
       - name: Update Helm Index
         run: |
