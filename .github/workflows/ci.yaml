@@ -49,27 +49,27 @@ jobs:
         run: |
           helm version
 
-      # - name: Install the latest version of Kind
-      #   shell: bash
-      #   run: |
-      #     curl -Lo ./kind https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64
-      #     chmod +x ./kind
-      #     sudo mv ./kind /usr/local/bin/kind
+      - name: Install the latest version of Kind
+        shell: bash
+        run: |
+          curl -Lo ./kind https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64
+          chmod +x ./kind
+          sudo mv ./kind /usr/local/bin/kind
 
-      # - name: Verify Kind Installation
-      #   shell: bash
-      #   run: |
-      #     kind version
+      - name: Verify Kind Installation
+        shell: bash
+        run: |
+          kind version
 
-      # - name: Create Kind Cluster
-      #   shell: bash
-      #   run: |
-      #     kind create cluster
+      - name: Create Kind Cluster
+        shell: bash
+        run: |
+          kind create cluster
 
-      # - name: Run Helm Test
-      #   run: |
-      #     helm upgrade -i liferay-helm .
-      #     helm test liferay-helm
+      - name: Run Helm Test
+        run: |
+          helm upgrade -i liferay-helm .
+          helm test liferay-helm
 
       - name: Calculate Chart Version
         if: ${{ env.PUBLISH == 'true' }}
