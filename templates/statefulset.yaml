@@ -74,13 +74,21 @@ spec:
               {{- end }}
       containers:
         - name: {{ .Chart.Name }}
-          {{- with .Values.env }}
           env:
+            - name: POD_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: LIFERAY_CLUSTER_PERIOD_LINK_PERIOD_BIND_PERIOD_ADDR_OPENBRACKET__QUOTE_CLUSTER_MINUS_LINK_MINUS_CONTROL_QUOTE__CLOSEBRACKET_
+              value: "${env.POD_ID}"
+            - name: LIFERAY_CLUSTER_PERIOD_LINK_PERIOD_BIND_PERIOD_ADDR_OPENBRACKET__QUOTE_CLUSTER_MINUS_LINK_MINUS_UDP_QUOTE__CLOSEBRACKET_
+              value: "${env.POD_ID}"
+            - name: LIFERAY_PORTAL_PERIOD_INSTANCE_PERIOD_INET_PERIOD_SOCKET_PERIOD_ADDRESS
+              value: "${env.POD_ID}:{{ .Values.service.port }}"
+
+            {{- with .Values.env }}
             {{- toYaml . | nindent 12 }}
-          {{- end }}
-          envFrom:
-            - configMapRef:
-                name: {{ include "liferay-helm.fullname" . }}
+            {{- end }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
@@ -171,6 +179,12 @@ spec:
               name: liferay-file-resources
               subPath: portal-custom.properties
               readOnly: true
+            {{- if  or (gt (int .Values.replicaCount) 1) .Values.autoscaling.enabled }}
+            - mountPath: /opt/liferay/unicast.xml
+              name: liferay-file-resources
+              subPath: unicast.xml
+              readOnly: true
+            {{- end }}
             {{- end }}
             {{- with .Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
