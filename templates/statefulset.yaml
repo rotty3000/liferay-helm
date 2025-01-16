@@ -165,11 +165,6 @@ spec:
               name: liferay-file-resources
               subPath: portal-custom.properties
               readOnly: true
-            - mountPath: /opt/liferay/deploy/license.xml
-              name: liferay-file-resources
-              subPath: license.xml
-              readOnly: true
-
             {{- end }}
             {{- with .Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}

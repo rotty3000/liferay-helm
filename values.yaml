@@ -68,9 +68,9 @@ volumes: {}
 # Additional volumeMounts on the main dxp container
 volumeMounts:
   {}
-  # - mountPath: /opt/liferay/osgi/config/foo.config
+  # - mountPath: /opt/liferay/deploy/license.xml
   #   name: liferay-file-resources
-  #   subPath: foo.config
+  #   subPath: license.xml
   #   readOnly: true
 
 #### Setup dependent services
