@@ -14,13 +14,15 @@ config:
 
 configmap:
   # Annotations to add to the configmap
-  annotations: {}
-  # Data to add to the configmap
+  annotations:
+    {}
+    # helm.sh/resource-policy: keep
 
   # By setting this to true all the default configmap entries files will not be
   # emitted and only those defined in 'configmap.data' will be used.
   overrideDefaults: false
 
+  # Data to add to the configmap
   data:
     portal-custom.properties: |
       include-and-override=portal-developer.properties
