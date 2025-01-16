@@ -96,6 +96,8 @@ data:
     cluster.link.channel.properties.control=/opt/liferay/unicast.xml
     cluster.link.channel.properties.transport.0=/opt/liferay/unicast.xml
     cluster.link.enabled=true
+    enterprise.product.notification.enabled=false
+    portlet.session.replicate.enabled=true
     {{- end }}
 
   com.liferay.redirect.internal.configuration.RedirectURLConfiguration.config: |
@@ -119,6 +121,195 @@ data:
     {{- end }}
 
   {{- if  or (gt (int .Values.replicaCount) 1) .Values.autoscaling.enabled }}
+  server.xml: |
+    <?xml version="1.0" encoding="UTF-8"?>
+    <!--
+      Licensed to the Apache Software Foundation (ASF) under one or more
+      contributor license agreements.  See the NOTICE file distributed with
+      this work for additional information regarding copyright ownership.
+      The ASF licenses this file to You under the Apache License, Version 2.0
+      (the "License"); you may not use this file except in compliance with
+      the License.  You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+      Unless required by applicable law or agreed to in writing, software
+      distributed under the License is distributed on an "AS IS" BASIS,
+      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+      See the License for the specific language governing permissions and
+      limitations under the License.
+    -->
+    <!-- Note:  A "Server" is not itself a "Container", so you may not
+        define subcomponents such as "Valves" at this level.
+        Documentation at /docs/config/server.html
+    -->
+    <Server port="8005" shutdown="SHUTDOWN">
+      <Listener className="org.apache.catalina.startup.VersionLoggerListener" />
+      <!-- Security listener. Documentation at /docs/config/listeners.html
+      <Listener className="org.apache.catalina.security.SecurityListener" />
+      -->
+      <!-- APR library loader. Documentation at /docs/apr.html -->
+      <Listener className="org.apache.catalina.core.AprLifecycleListener" SSLEngine="on" />
+      <!-- Prevent memory leaks due to use of particular java/javax APIs-->
+      <Listener className="org.apache.catalina.core.JreMemoryLeakPreventionListener" />
+      <Listener className="org.apache.catalina.mbeans.GlobalResourcesLifecycleListener" />
+      <Listener className="org.apache.catalina.core.ThreadLocalLeakPreventionListener" />
+
+      <!-- Global JNDI resources
+          Documentation at /docs/jndi-resources-howto.html
+      -->
+      <GlobalNamingResources>
+        <!-- Editable user database that can also be used by
+            UserDatabaseRealm to authenticate users
+        -->
+        <Resource name="UserDatabase" auth="Container"
+                  type="org.apache.catalina.UserDatabase"
+                  description="User database that can be updated and saved"
+                  factory="org.apache.catalina.users.MemoryUserDatabaseFactory"
+                  pathname="conf/tomcat-users.xml" />
+      </GlobalNamingResources>
+
+      <!-- A "Service" is a collection of one or more "Connectors" that share
+          a single "Container" Note:  A "Service" is not itself a "Container",
+          so you may not define subcomponents such as "Valves" at this level.
+          Documentation at /docs/config/service.html
+      -->
+      <Service name="Catalina">
+
+        <!--The connectors can use a shared executor, you can define one or more named thread pools-->
+        <!--
+        <Executor name="tomcatThreadPool" namePrefix="catalina-exec-"
+            maxThreads="150" minSpareThreads="4"/>
+        -->
+
+
+        <!-- A "Connector" represents an endpoint by which requests are received
+            and responses are returned. Documentation at :
+            Java HTTP Connector: /docs/config/http.html
+            Java AJP  Connector: /docs/config/ajp.html
+            APR (HTTP/AJP) Connector: /docs/apr.html
+            Define a non-SSL/TLS HTTP/1.1 Connector on port 8080
+        -->
+        <Connector maxThreads="75" port="8080" protocol="HTTP/1.1"
+                  connectionTimeout="20000"
+                  redirectPort="8443"
+                  maxParameterCount="1000"
+                  />
+        <!-- A "Connector" using the shared thread pool-->
+        <!--
+        <Connector executor="tomcatThreadPool"
+                  port="8080" protocol="HTTP/1.1"
+                  connectionTimeout="20000"
+                  redirectPort="8443"
+                  maxParameterCount="1000"
+                  />
+        -->
+        <!-- Define an SSL/TLS HTTP/1.1 Connector on port 8443
+            This connector uses the NIO implementation. The default
+            SSLImplementation will depend on the presence of the APR/native
+            library and the useOpenSSL attribute of the AprLifecycleListener.
+            Either JSSE or OpenSSL style configuration may be used regardless of
+            the SSLImplementation selected. JSSE style configuration is used below.
+        -->
+        <!--
+        <Connector port="8443" protocol="org.apache.coyote.http11.Http11NioProtocol"
+                  maxThreads="150" SSLEnabled="true"
+                  maxParameterCount="1000"
+                  >
+            <SSLHostConfig>
+                <Certificate certificateKeystoreFile="conf/localhost-rsa.jks"
+                            type="RSA" />
+            </SSLHostConfig>
+        </Connector>
+        -->
+        <!-- Define an SSL/TLS HTTP/1.1 Connector on port 8443 with HTTP/2
+            This connector uses the APR/native implementation which always uses
+            OpenSSL for TLS.
+            Either JSSE or OpenSSL style configuration may be used. OpenSSL style
+            configuration is used below.
+        -->
+        <!--
+        <Connector port="8443" protocol="org.apache.coyote.http11.Http11AprProtocol"
+                  maxThreads="150" SSLEnabled="true"
+                  maxParameterCount="1000"
+                  >
+            <UpgradeProtocol className="org.apache.coyote.http2.Http2Protocol" />
+            <SSLHostConfig>
+                <Certificate certificateKeyFile="conf/localhost-rsa-key.pem"
+                            certificateFile="conf/localhost-rsa-cert.pem"
+                            certificateChainFile="conf/localhost-rsa-chain.pem"
+                            type="RSA" />
+            </SSLHostConfig>
+        </Connector>
+        -->
+
+        <!-- Define an AJP 1.3 Connector on port 8009 -->
+        <!--
+        <Connector protocol="AJP/1.3"
+                  address="::1"
+                  port="8009"
+                  redirectPort="8443"
+                  maxParameterCount="1000"
+                  />
+        -->
+
+        <!-- An Engine represents the entry point (within Catalina) that processes
+            every request.  The Engine implementation for Tomcat stand alone
+            analyzes the HTTP headers included with the request, and passes them
+            on to the appropriate Host (virtual host).
+            Documentation at /docs/config/engine.html -->
+
+        <!-- You should set jvmRoute to support load-balancing via AJP ie :
+        <Engine name="Catalina" defaultHost="localhost" jvmRoute="jvm1">
+        -->
+        <Engine name="Catalina" defaultHost="localhost">
+
+          <!--For clustering, please take a look at documentation at:
+              /docs/cluster-howto.html  (simple how to)
+              /docs/config/cluster.html (reference documentation) -->
+          <Cluster className="org.apache.catalina.ha.tcp.SimpleTcpCluster">
+            <Manager className="com.liferay.support.tomcat.session.LiferayDeltaManager" />
+            <Channel className="org.apache.catalina.tribes.group.GroupChannel">
+              <Sender className="org.apache.catalina.tribes.transport.ReplicationTransmitter">
+                <Transport className="org.apache.catalina.tribes.transport.nio.PooledParallelSender" timeout="300000" />
+              </Sender>
+            </Channel>
+          </Cluster>
+
+          <!-- Use the LockOutRealm to prevent attempts to guess user passwords
+              via a brute-force attack -->
+          <Realm className="org.apache.catalina.realm.LockOutRealm">
+            <!-- This Realm uses the UserDatabase configured in the global JNDI
+                resources under the key "UserDatabase".  Any edits
+                that are performed against this UserDatabase are immediately
+                available for use by the Realm.  -->
+            <Realm className="org.apache.catalina.realm.UserDatabaseRealm"
+                  resourceName="UserDatabase"/>
+          </Realm>
+
+          <Host name="localhost"  appBase="webapps"
+                unpackWARs="true" autoDeploy="true">
+
+            <!-- SingleSignOn valve, share authentication between web applications
+                Documentation at: /docs/config/valve.html -->
+            <!--
+            <Valve className="org.apache.catalina.authenticator.SingleSignOn" />
+            -->
+
+            <!-- Access log processes all example.
+                Documentation at: /docs/config/valve.html
+                Note: The pattern used is equivalent to using pattern="common" -->
+            <!-- <Valve className="org.apache.catalina.valves.AccessLogValve" directory="logs"
+                  prefix="localhost_access_log" suffix=".txt"
+                  pattern="%h %l %u %t &quot;%r&quot; %s %b" />-->
+            <Valve className="org.apache.catalina.valves.ErrorReportValve" showReport="false" showServerInfo="false" />
+
+
+          </Host>
+        </Engine>
+      </Service>
+    </Server>
+
   unicast.xml: |
     <!--
         TCP based stack, with flow control and message bundling. This is usually used when IP
@@ -165,6 +356,239 @@ data:
         <!--RSVP resend_interval="2000" timeout="10000"/-->
         <pbcast.STATE_TRANSFER/>
     </config>
+
+  web.xml: |
+    <?xml version="1.0"?>
+
+    <web-app id="Liferay_Portal" metadata-complete="true" version="3.0" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
+      <distributable />
+      <context-param>
+        <param-name>axis.servicesPath</param-name>
+        <param-value>/api/axis/</param-value>
+      </context-param>
+      <context-param>
+        <param-name>contextClass</param-name>
+        <param-value>com.liferay.portal.spring.context.PortalApplicationContext</param-value>
+      </context-param>
+      <context-param>
+        <param-name>contextConfigLocation</param-name>
+        <param-value></param-value>
+      </context-param>
+      <context-param>
+        <param-name>com.ibm.websphere.portletcontainer.PortletDeploymentEnabled</param-name>
+        <param-value>false</param-value>
+      </context-param>
+      <context-param>
+        <param-name>osgi.http.endpoint</param-name>
+        <param-value>/o/</param-value>
+      </context-param>
+      <session-config>
+        <session-timeout>15</session-timeout>
+        <cookie-config>
+          <http-only>true</http-only>
+        </cookie-config>
+      </session-config>
+      <mime-mapping>
+        <extension>js</extension>
+        <mime-type>text/javascript</mime-type>
+      </mime-mapping>
+      <mime-mapping>
+        <extension>png</extension>
+        <mime-type>image/png</mime-type>
+      </mime-mapping>
+      <mime-mapping>
+        <extension>xml</extension>
+        <mime-type>text/xml</mime-type>
+      </mime-mapping>
+      <welcome-file-list>
+        <welcome-file>index.html</welcome-file>
+        <welcome-file>index.jsp</welcome-file>
+      </welcome-file-list>
+      <error-page>
+        <location>/errors/code.jsp</location>
+      </error-page>
+      <security-constraint>
+        <web-resource-collection>
+          <web-resource-name>/c/portal/protected</web-resource-name>
+          <url-pattern>/c/portal/protected</url-pattern>
+          <url-pattern>/ar/c/portal/protected</url-pattern>
+          <url-pattern>/ar-SA/c/portal/protected</url-pattern>
+          <url-pattern>/ar_SA/c/portal/protected</url-pattern>
+          <url-pattern>/bg/c/portal/protected</url-pattern>
+          <url-pattern>/bg-BG/c/portal/protected</url-pattern>
+          <url-pattern>/bg_BG/c/portal/protected</url-pattern>
+          <url-pattern>/ca/c/portal/protected</url-pattern>
+          <url-pattern>/ca-AD/c/portal/protected</url-pattern>
+          <url-pattern>/ca-ES/c/portal/protected</url-pattern>
+          <url-pattern>/ca-ES-VALENCIA/c/portal/protected</url-pattern>
+          <url-pattern>/ca_AD/c/portal/protected</url-pattern>
+          <url-pattern>/ca_ES/c/portal/protected</url-pattern>
+          <url-pattern>/ca_ES_VALENCIA/c/portal/protected</url-pattern>
+          <url-pattern>/cs/c/portal/protected</url-pattern>
+          <url-pattern>/cs-CZ/c/portal/protected</url-pattern>
+          <url-pattern>/cs_CZ/c/portal/protected</url-pattern>
+          <url-pattern>/da/c/portal/protected</url-pattern>
+          <url-pattern>/da-DK/c/portal/protected</url-pattern>
+          <url-pattern>/da_DK/c/portal/protected</url-pattern>
+          <url-pattern>/de/c/portal/protected</url-pattern>
+          <url-pattern>/de-DE/c/portal/protected</url-pattern>
+          <url-pattern>/de_DE/c/portal/protected</url-pattern>
+          <url-pattern>/el/c/portal/protected</url-pattern>
+          <url-pattern>/el-GR/c/portal/protected</url-pattern>
+          <url-pattern>/el_GR/c/portal/protected</url-pattern>
+          <url-pattern>/en/c/portal/protected</url-pattern>
+          <url-pattern>/en-AU/c/portal/protected</url-pattern>
+          <url-pattern>/en-CA/c/portal/protected</url-pattern>
+          <url-pattern>/en-GB/c/portal/protected</url-pattern>
+          <url-pattern>/en-US/c/portal/protected</url-pattern>
+          <url-pattern>/en_AU/c/portal/protected</url-pattern>
+          <url-pattern>/en_CA/c/portal/protected</url-pattern>
+          <url-pattern>/en_GB/c/portal/protected</url-pattern>
+          <url-pattern>/en_US/c/portal/protected</url-pattern>
+          <url-pattern>/es/c/portal/protected</url-pattern>
+          <url-pattern>/es-AR/c/portal/protected</url-pattern>
+          <url-pattern>/es-CO/c/portal/protected</url-pattern>
+          <url-pattern>/es-ES/c/portal/protected</url-pattern>
+          <url-pattern>/es-MX/c/portal/protected</url-pattern>
+          <url-pattern>/es_AR/c/portal/protected</url-pattern>
+          <url-pattern>/es_CO/c/portal/protected</url-pattern>
+          <url-pattern>/es_ES/c/portal/protected</url-pattern>
+          <url-pattern>/es_MX/c/portal/protected</url-pattern>
+          <url-pattern>/et/c/portal/protected</url-pattern>
+          <url-pattern>/et-EE/c/portal/protected</url-pattern>
+          <url-pattern>/et_EE/c/portal/protected</url-pattern>
+          <url-pattern>/eu/c/portal/protected</url-pattern>
+          <url-pattern>/eu-ES/c/portal/protected</url-pattern>
+          <url-pattern>/eu_ES/c/portal/protected</url-pattern>
+          <url-pattern>/fa/c/portal/protected</url-pattern>
+          <url-pattern>/fa-IR/c/portal/protected</url-pattern>
+          <url-pattern>/fa_IR/c/portal/protected</url-pattern>
+          <url-pattern>/fi/c/portal/protected</url-pattern>
+          <url-pattern>/fi-FI/c/portal/protected</url-pattern>
+          <url-pattern>/fi_FI/c/portal/protected</url-pattern>
+          <url-pattern>/fr/c/portal/protected</url-pattern>
+          <url-pattern>/fr-CA/c/portal/protected</url-pattern>
+          <url-pattern>/fr-FR/c/portal/protected</url-pattern>
+          <url-pattern>/fr_CA/c/portal/protected</url-pattern>
+          <url-pattern>/fr_FR/c/portal/protected</url-pattern>
+          <url-pattern>/gl/c/portal/protected</url-pattern>
+          <url-pattern>/gl-ES/c/portal/protected</url-pattern>
+          <url-pattern>/gl_ES/c/portal/protected</url-pattern>
+          <url-pattern>/hi/c/portal/protected</url-pattern>
+          <url-pattern>/hi-IN/c/portal/protected</url-pattern>
+          <url-pattern>/hi_IN/c/portal/protected</url-pattern>
+          <url-pattern>/hr/c/portal/protected</url-pattern>
+          <url-pattern>/hr-HR/c/portal/protected</url-pattern>
+          <url-pattern>/hr_HR/c/portal/protected</url-pattern>
+          <url-pattern>/hu/c/portal/protected</url-pattern>
+          <url-pattern>/hu-HU/c/portal/protected</url-pattern>
+          <url-pattern>/hu_HU/c/portal/protected</url-pattern>
+          <url-pattern>/in/c/portal/protected</url-pattern>
+          <url-pattern>/in-ID/c/portal/protected</url-pattern>
+          <url-pattern>/in_ID/c/portal/protected</url-pattern>
+          <url-pattern>/it/c/portal/protected</url-pattern>
+          <url-pattern>/it-IT/c/portal/protected</url-pattern>
+          <url-pattern>/it_IT/c/portal/protected</url-pattern>
+          <url-pattern>/iw/c/portal/protected</url-pattern>
+          <url-pattern>/iw-IL/c/portal/protected</url-pattern>
+          <url-pattern>/iw_IL/c/portal/protected</url-pattern>
+          <url-pattern>/ja/c/portal/protected</url-pattern>
+          <url-pattern>/ja-JP/c/portal/protected</url-pattern>
+          <url-pattern>/ja_JP/c/portal/protected</url-pattern>
+          <url-pattern>/kk/c/portal/protected</url-pattern>
+          <url-pattern>/kk-KZ/c/portal/protected</url-pattern>
+          <url-pattern>/kk_KZ/c/portal/protected</url-pattern>
+          <url-pattern>/km/c/portal/protected</url-pattern>
+          <url-pattern>/km-KH/c/portal/protected</url-pattern>
+          <url-pattern>/km_KH/c/portal/protected</url-pattern>
+          <url-pattern>/ko/c/portal/protected</url-pattern>
+          <url-pattern>/ko-KR/c/portal/protected</url-pattern>
+          <url-pattern>/ko_KR/c/portal/protected</url-pattern>
+          <url-pattern>/lo/c/portal/protected</url-pattern>
+          <url-pattern>/lo-LA/c/portal/protected</url-pattern>
+          <url-pattern>/lo_LA/c/portal/protected</url-pattern>
+          <url-pattern>/lt/c/portal/protected</url-pattern>
+          <url-pattern>/lt-LT/c/portal/protected</url-pattern>
+          <url-pattern>/lt_LT/c/portal/protected</url-pattern>
+          <url-pattern>/ms/c/portal/protected</url-pattern>
+          <url-pattern>/ms-MY/c/portal/protected</url-pattern>
+          <url-pattern>/ms_MY/c/portal/protected</url-pattern>
+          <url-pattern>/nb/c/portal/protected</url-pattern>
+          <url-pattern>/nb-NO/c/portal/protected</url-pattern>
+          <url-pattern>/nb_NO/c/portal/protected</url-pattern>
+          <url-pattern>/nl/c/portal/protected</url-pattern>
+          <url-pattern>/nl-BE/c/portal/protected</url-pattern>
+          <url-pattern>/nl-NL/c/portal/protected</url-pattern>
+          <url-pattern>/nl_BE/c/portal/protected</url-pattern>
+          <url-pattern>/nl_NL/c/portal/protected</url-pattern>
+          <url-pattern>/pl/c/portal/protected</url-pattern>
+          <url-pattern>/pl-PL/c/portal/protected</url-pattern>
+          <url-pattern>/pl_PL/c/portal/protected</url-pattern>
+          <url-pattern>/pt/c/portal/protected</url-pattern>
+          <url-pattern>/pt-BR/c/portal/protected</url-pattern>
+          <url-pattern>/pt-PT/c/portal/protected</url-pattern>
+          <url-pattern>/pt_BR/c/portal/protected</url-pattern>
+          <url-pattern>/pt_PT/c/portal/protected</url-pattern>
+          <url-pattern>/ro/c/portal/protected</url-pattern>
+          <url-pattern>/ro-RO/c/portal/protected</url-pattern>
+          <url-pattern>/ro_RO/c/portal/protected</url-pattern>
+          <url-pattern>/ru/c/portal/protected</url-pattern>
+          <url-pattern>/ru-RU/c/portal/protected</url-pattern>
+          <url-pattern>/ru_RU/c/portal/protected</url-pattern>
+          <url-pattern>/sk/c/portal/protected</url-pattern>
+          <url-pattern>/sk-SK/c/portal/protected</url-pattern>
+          <url-pattern>/sk_SK/c/portal/protected</url-pattern>
+          <url-pattern>/sl/c/portal/protected</url-pattern>
+          <url-pattern>/sl-SI/c/portal/protected</url-pattern>
+          <url-pattern>/sl_SI/c/portal/protected</url-pattern>
+          <url-pattern>/sr/c/portal/protected</url-pattern>
+          <url-pattern>/sr-RS/c/portal/protected</url-pattern>
+          <url-pattern>/sr-RS-latin/c/portal/protected</url-pattern>
+          <url-pattern>/sr_RS/c/portal/protected</url-pattern>
+          <url-pattern>/sr_RS_latin/c/portal/protected</url-pattern>
+          <url-pattern>/sv/c/portal/protected</url-pattern>
+          <url-pattern>/sv-SE/c/portal/protected</url-pattern>
+          <url-pattern>/sv_SE/c/portal/protected</url-pattern>
+          <url-pattern>/ta/c/portal/protected</url-pattern>
+          <url-pattern>/ta-IN/c/portal/protected</url-pattern>
+          <url-pattern>/ta_IN/c/portal/protected</url-pattern>
+          <url-pattern>/th/c/portal/protected</url-pattern>
+          <url-pattern>/th-TH/c/portal/protected</url-pattern>
+          <url-pattern>/th_TH/c/portal/protected</url-pattern>
+          <url-pattern>/tr/c/portal/protected</url-pattern>
+          <url-pattern>/tr-TR/c/portal/protected</url-pattern>
+          <url-pattern>/tr_TR/c/portal/protected</url-pattern>
+          <url-pattern>/uk/c/portal/protected</url-pattern>
+          <url-pattern>/uk-UA/c/portal/protected</url-pattern>
+          <url-pattern>/uk_UA/c/portal/protected</url-pattern>
+          <url-pattern>/vi/c/portal/protected</url-pattern>
+          <url-pattern>/vi-VN/c/portal/protected</url-pattern>
+          <url-pattern>/vi_VN/c/portal/protected</url-pattern>
+          <url-pattern>/zh/c/portal/protected</url-pattern>
+          <url-pattern>/zh-CN/c/portal/protected</url-pattern>
+          <url-pattern>/zh-TW/c/portal/protected</url-pattern>
+          <url-pattern>/zh_CN/c/portal/protected</url-pattern>
+          <url-pattern>/zh_TW/c/portal/protected</url-pattern>
+        </web-resource-collection>
+        <auth-constraint>
+          <role-name>users</role-name>
+        </auth-constraint>
+        <user-data-constraint>
+          <transport-guarantee>NONE</transport-guarantee>
+        </user-data-constraint>
+      </security-constraint>
+      <login-config>
+        <auth-method>FORM</auth-method>
+        <realm-name>PortalRealm</realm-name>
+        <form-login-config>
+          <form-login-page>/c/portal/j_login</form-login-page>
+          <form-error-page>/c/portal/j_login_error</form-error-page>
+        </form-login-config>
+      </login-config>
+      <security-role>
+        <role-name>users</role-name>
+      </security-role>
+    </web-app>
   {{- end }}
 
   {{- end }}

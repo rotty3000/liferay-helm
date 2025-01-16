@@ -197,9 +197,17 @@ spec:
               subPath: portal-custom.properties
               readOnly: true
             {{- if  or (gt (int .Values.replicaCount) 1) .Values.autoscaling.enabled }}
+            - mountPath: /opt/liferay/tomcat/conf/server.xml
+              name: liferay-file-resources
+              subPath: server.xml
+              readOnly: true
             - mountPath: /opt/liferay/unicast.xml
               name: liferay-file-resources
               subPath: unicast.xml
+              readOnly: true
+            - mountPath: /opt/liferay/tomcat/webapps/ROOT/WEB-INF/web.xml
+              name: liferay-file-resources
+              subPath: web.xml
               readOnly: true
             {{- end }}
             {{- end }}
