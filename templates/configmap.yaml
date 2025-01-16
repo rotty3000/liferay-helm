@@ -9,6 +9,7 @@ metadata:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 data:
+  {{- if not .Values.configmap.overrideDefaults }}
   portal-ext.properties: |
     include-and-override=portal-custom.properties
 
@@ -103,5 +104,7 @@ data:
     operationMode="REMOTE"
     password={{ .password | quote }}
     {{- end }}
+
+  {{- end }}
 
   {{- toYaml .Values.configmap.data | nindent 2 }}

@@ -144,6 +144,7 @@ spec:
               subPath: liferay/liferay.pid
 
             # Mounted configuration files
+            {{- if not .Values.configmap.overrideDefaults }}
             - mountPath: /opt/liferay/osgi/configs/com.liferay.portal.k8s.agent.configuration.PortalK8sAgentConfiguration.config
               name: liferay-file-resources
               subPath: com.liferay.portal.k8s.agent.configuration.PortalK8sAgentConfiguration.config
@@ -165,6 +166,7 @@ spec:
               subPath: license.xml
               readOnly: true
 
+            {{- end }}
             {{- with .Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
