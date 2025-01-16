@@ -31,6 +31,9 @@ configmap:
 # Use this to pass environment variables directly to the DXP container.
 # See: https://kubernetes.io/docs/tasks/inject-data-application/define-environment-variable-container/
 env:
+  # Necessary for DXP clustering.
+  - name: JDK_JAVA_OPTIONS
+    value: "--add-opens=jdk.naming.dns/com.sun.jndi.dns=java.naming"
   - name: LIFERAY_DISABLE_TRIAL_LICENSE
     value: "false"
 
@@ -250,6 +253,7 @@ service:
   # This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
   port: 8080
   debugPort: 8000
+  clusterPort: 7800
 
 # This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/
 serviceAccount:

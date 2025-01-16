@@ -90,6 +90,9 @@ spec:
             - name: debug
               containerPort: {{ .Values.service.debugPort }}
               protocol: TCP
+            - name: cluster
+              containerPort: {{ .Values.service.clusterPort }}
+              protocol: TCP
           livenessProbe:
             httpGet:
               path: /c/portal/robots
