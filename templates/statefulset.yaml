@@ -87,6 +87,9 @@ spec:
             - name: http
               containerPort: {{ .Values.service.port }}
               protocol: TCP
+            - name: debug
+              containerPort: {{ .Values.service.debugPort }}
+              protocol: TCP
           livenessProbe:
             httpGet:
               path: /c/portal/robots
