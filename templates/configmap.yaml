@@ -88,6 +88,10 @@ data:
     # SRE-5749 enable FeatureFlag LPS-202104
     feature.flag.LPS-202104=true
 
+  com.liferay.redirect.internal.configuration.RedirectURLConfiguration.config: |
+    allowedDomains="*"
+    securityMode="domain"
+
   com.liferay.portal.k8s.agent.configuration.PortalK8sAgentConfiguration.config: |
     apiServerHost="$[env:KUBERNETES_SERVICE_HOST]"
     apiServerPort="$[env:KUBERNETES_SERVICE_PORT]"
