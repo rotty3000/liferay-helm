@@ -28,6 +28,12 @@ configmap:
     # license.xml: |
     #   <license>
 
+# Use this to pass environment variables directly to the DXP container.
+# See: https://kubernetes.io/docs/tasks/inject-data-application/define-environment-variable-container/
+env:
+  - name: LIFERAY_DISABLE_TRIAL_LICENSE
+    value: "false"
+
 # This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
 ingress:
   enabled: true
