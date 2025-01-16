@@ -35,10 +35,9 @@ configmap:
 env:
   - name: LIFERAY_DISABLE_TRIAL_LICENSE
     value: "false"
-
   # The following are necessary for DXP clustering.
   - name: JDK_JAVA_OPTIONS
-    value: "--add-opens=jdk.naming.dns/com.sun.jndi.dns=java.naming"
+    value: "--add-opens=jdk.naming.dns/com.sun.jndi.dns=java.naming --add-exports=jdk.naming.dns/com.sun.jndi.dns=java.naming"
 
 # This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
 ingress:

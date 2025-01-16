@@ -35,12 +35,29 @@ spec:
           command: ["/bin/sh","-c"]
           args:
             - |
-              if [ ! -e /temp/liferay/.init ]; then
-                mkdir -p /temp/liferay/data
-                cp -rv /opt/liferay/data/* /temp/liferay/data
+              mkdir -p /temp/liferay/data
 
-                touch /temp/liferay/.init
+              {{- if not .Values.postgres.internal.enabled }}
+              if [ ! -e /temp/liferay/.db.init ]; then
+                cp -rv /opt/liferay/data/hypersonic /temp/liferay/data
               fi
+              touch /temp/liferay/.db.init
+              {{- end }}
+
+              {{- if not .Values.s3.internal.enabled }}
+              if [ ! -e /temp/liferay/.s3.init ]; then
+                cp -rv /opt/liferay/data/document_library /temp/liferay/data
+              fi
+              touch /temp/liferay/.s3.init
+              {{- end }}
+
+              {{- if not .Values.elasticsearch.internal.enabled }}
+              if [ ! -e /temp/liferay/.es.init ]; then
+                cp -rv /opt/liferay/data/elasticsearch7 /temp/liferay/data
+              fi
+              touch /temp/liferay/.es.init
+              {{- end }}
+
           volumeMounts:
           - mountPath: /temp
             name: liferay-working-data-pvc

@@ -92,14 +92,13 @@ data:
     # Clustering
     #
     {{- if  or (gt (int .Values.replicaCount) 1) .Values.autoscaling.enabled }}
-    cluster.link.autodetect.address=""
+    cluster.link.autodetect.address=
     cluster.link.channel.properties.control=/opt/liferay/unicast.xml
     cluster.link.channel.properties.transport.0=/opt/liferay/unicast.xml
     cluster.link.enabled=true
     {{- end }}
 
   com.liferay.redirect.internal.configuration.RedirectURLConfiguration.config: |
-    allowedDomains="*"
     securityMode="domain"
 
   com.liferay.portal.k8s.agent.configuration.PortalK8sAgentConfiguration.config: |
@@ -146,7 +145,7 @@ data:
             thread_pool.keep_alive_time="5000"/>
 
         <dns.DNS_PING
-            dns_query="_{{ .Values.service.clusterPort }}._tcp.{{ include "liferay-helm.fullname" . }}-headless.{{ .Release.Namespace }}.svc.cluster.local"
+            dns_query="_cluster._tcp.{{ include "liferay-helm.fullname" . }}-headless"
             dns_record_type="SRV" />
         <MERGE3  min_interval="10000" max_interval="30000"/>
         <FD_SOCK/>
