@@ -43,7 +43,7 @@ data:
     database.indexes.update.on.startup=true
     #index.on.startup=true
     notification.email.template.enabled=false
-    passwords.default.policy.change.required=false
+    passwords.default.policy.change.required={{ .Values.config.requiredPasswordChange }}
     passwords.default.policy.lockout.duration=3600
     passwords.default.policy.lockout=true
     passwords.default.policy.max.failure=20
