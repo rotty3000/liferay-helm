@@ -106,9 +106,10 @@ jobs:
         if: ${{ env.PUBLISH == 'true' }}
         working-directory: dist
         run: |
+          HELM_REPOSITORY=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
           for f in *.tgz ; do
               echo "$f"
-              helm push $f oci://ghcr.io/${{ lowercase(github.repository) }}/charts
+              helm push $f oci://ghcr.io/${HELM_REPOSITORY}/charts
           done
 
       - name: Install YQ
