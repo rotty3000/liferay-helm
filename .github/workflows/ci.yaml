@@ -108,7 +108,7 @@ jobs:
         run: |
           for f in *.tgz ; do
               echo "$f"
-              helm push $f oci://ghcr.io/${{ github.repository }}/charts
+              helm push $f oci://ghcr.io/${{ lowercase(github.repository) }}/charts
           done
 
       - name: Install YQ
