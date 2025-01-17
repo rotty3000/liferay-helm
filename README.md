@@ -1,31 +1,25 @@
-### Deploy Helm Chart
+# A Helm Chart for Liferay DXP
+
+[![CI](https://github.com/LiferayCloud/liferay-helm-chart/actions/workflows/ci.yaml/badge.svg?branch=main)](https://github.com/LiferayCloud/liferay-helm-chart/actions/workflows/ci.yaml)
+
+## Install the Chart
+
+Add the chart repository `https://LiferayCloud.github.io/liferay-helm-chart/charts`
 
 ```shell
-helm upgrade -i foo .
+helm repo add liferay-helm-chart-repo https://LiferayCloud.github.io/liferay-helm-chart/charts
 ```
 
-## Uninstall Helm Chart
+You can search the repo, e.g.:
 
 ```shell
-helm uninstall foo .
+$ helm search repo --devel liferay
+NAME                               	CHART VERSION	APP VERSION	DESCRIPTION
+liferay-helm-chart-repo/liferay	0.1.0        	latest     	A Liferay DXP Helm chart for Kubernetes
 ```
 
-### Watch resources
+### [For Local Development](FOR_LOCAL_DEVELOPMENT.md)
 
-```shell
-alias kall='k get -A all,cm,ingress,sa,pvc --field-selector=metadata.namespace!=kube-system'
-alias w='watch -n.5 '
-w kall
-```
+### [For Production](FOR_PRODUCTION.md)
 
-### Watch Events
-
-```shell
-k get events -w
-```
-
-### Watch Logs (with string `foo`)
-
-```shell
-k stern foo
-```
+### [Release Management](RELEASE_MANAGEMENT.md)

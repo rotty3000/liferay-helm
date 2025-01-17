@@ -1,0 +1,153 @@
+{{- if .Values.elasticsearch.internal.enabled }}
+{{- with .Values.elasticsearch }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "liferay.fullname" $ }}-elasticsearch
+  labels:
+    app: {{ $.Chart.Name }}-elasticsearch
+    {{- include "liferay.labels" $ | nindent 4 }}
+spec:
+  replicas: {{ .internal.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ $.Chart.Name }}-elasticsearch
+      {{- include "liferay.selectorLabels" $ | nindent 6 }}
+  serviceName: {{ include "liferay.fullname" $ }}-elasticsearch
+  template:
+    metadata:
+      labels:
+        app: {{ $.Chart.Name }}-elasticsearch
+        {{- include "liferay.labels" $ | nindent 8 }}
+    spec:
+      initContainers:
+        - name: increase-vm-max-map
+          image: busybox
+          command: ["sysctl", "-w", "vm.max_map_count=262144"]
+          securityContext:
+            privileged: true
+        - name: increase-fd-ulimit
+          image: busybox
+          command: ["sh", "-c", "ulimit -n 65536"]
+          securityContext:
+            privileged: true
+        - name: install-plugins
+          image:  {{ printf "%s:%s" (default "elasticsearch" .internal.image.repository) ((default "8.17.0" .internal.image.tag) | toString) }}
+          imagePullPolicy: {{ $.Values.image.pullPolicy }}
+          command:
+            - 'sh'
+            - '-c'
+            - |
+              if [ ! -d ./plugins/analysis-icu ];then
+                bin/elasticsearch-plugin install --batch analysis-icu analysis-kuromoji analysis-smartcn analysis-stempel
+              else
+                echo "Plugins already installed!"
+              fi
+
+              if [ ! -e ./_config/log4j2.properties ];then
+                cp -rv ./config/* ./_config
+              fi
+
+              find . -mtime -1 -ls
+          volumeMounts:
+            - mountPath: /usr/share/elasticsearch/plugins
+              name: liferay-elasticsearch-pvc
+              subPath: plugins
+            - mountPath: /usr/share/elasticsearch/_config
+              name: liferay-elasticsearch-pvc
+              subPath: config
+      containers:
+      - name: {{ $.Chart.Name }}-elasticsearch
+        env:
+          - name: xpack.security.enabled
+            value: "false"
+          - name: xpack.security.transport.ssl.enabled
+            value: "false"
+          - name: xpack.security.http.ssl.enabled
+            value: "false"
+          - name: cluster.name
+            value: {{ .config.clusterName }}
+          - name: discovery.type
+            value: single-node
+          - name: ES_JAVA_OPTS
+            value: "-Xms256m -Xmx256m"
+          - name: ELASTIC_PASSWORD
+            value: {{ .config.password }}
+          {{- with .internal.env }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        image:  {{ printf "%s:%s" (default "elasticsearch" .internal.image.repository) ((default "8.17.0" .internal.image.tag) | toString) }}
+        imagePullPolicy: {{ $.Values.image.pullPolicy }}
+        livenessProbe:
+          tcpSocket:
+            port: rest
+        ports:
+          - name: elasticsearch
+            containerPort: {{ default "9200" .config.port }}
+            protocol: TCP
+        readinessProbe:
+          tcpSocket:
+            port: elasticsearch
+        volumeMounts:
+          - mountPath: /usr/share/elasticsearch/config
+            name: liferay-elasticsearch-pvc
+            subPath: config
+          - mountPath: /usr/share/elasticsearch/data
+            name: liferay-elasticsearch-pvc
+            subPath: data
+          - mountPath: /usr/share/elasticsearch/logs
+            name: liferay-elasticsearch-pvc
+            subPath: logs
+          - mountPath: /usr/share/elasticsearch/plugins
+            name: liferay-elasticsearch-pvc
+            subPath: plugins
+      securityContext:
+        fsGroup: 1000
+  updateStrategy:
+    type: RollingUpdate
+  volumeClaimTemplates:
+  - metadata:
+      name: liferay-elasticsearch-pvc
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: {{ default "1Gi" .internal.storage}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "liferay.fullname" $ }}-elasticsearch
+  labels:
+    app: {{ $.Chart.Name }}-elasticsearch
+    {{- include "liferay.labels" $ | nindent 4 }}
+spec:
+  selector:
+    app: {{ $.Chart.Name }}-elasticsearch
+    {{- include "liferay.labels" $ | nindent 4 }}
+  ports:
+  - name: elasticsearch
+    port: {{ .config.port }}
+    targetPort: elasticsearch
+    protocol: TCP
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "liferay.fullname" $ }}-elasticsearch-headless
+  labels:
+    app: {{ $.Chart.Name }}-elasticsearch
+    {{- include "liferay.labels" $ | nindent 4 }}
+spec:
+  clusterIP: None # This is what makes it headless
+  selector:
+    app: {{ $.Chart.Name }}-elasticsearch
+    {{- include "liferay.labels" $ | nindent 4 }}
+  ports:
+  - name: elasticsearch
+    port: {{ .config.port }}
+    targetPort: elasticsearch
+    protocol: TCP
+{{- end }}
+{{- end }}
