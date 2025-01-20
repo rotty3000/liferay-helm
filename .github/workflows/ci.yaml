@@ -130,6 +130,7 @@ jobs:
           ./.github/scripts/publish_helm_index.sh
         env:
           CHARTS_URL: "oci://ghcr.io/${{ github.actor }}/${{ github.event.repository.name }}/charts"
+          GIT_REPOSITORY: ${{ github.repository }}
           INDEX_DIR: charts
           OWNER: ${{ github.actor }}
           PUBLISH_BRANCH: gh-pages

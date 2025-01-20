@@ -33,14 +33,13 @@ do
   FILES="${FILES} -F files[][path]=\"$value\" -F files[][contents]=\$(base64 -w0 $value)"
 done
 
-COMMIT_CMD='gh api graphql \
-	-F $githubRepository=${{ github.repository }} \
-	-F branchName=$PUBLISH_BRANCH \
+gh api graphql \
+	-F \$githubRepository=${GIT_REPOSITORY} \
+	-F branchName=${PUBLISH_BRANCH} \
 	-F expectedHeadOid=$(git rev-parse HEAD) \
 	-F commitMessage="publish: new helm index release" \
-	-F "query=@.github/api/createCommitOnBranch.gql"'
-
-${COMMIT_CMD} ${FILES}
+	-F "query=@.github/api/createCommitOnBranch.gql" \
+	${FILES}
 
 popd >& /dev/null
 rm -rf $tmpDir
