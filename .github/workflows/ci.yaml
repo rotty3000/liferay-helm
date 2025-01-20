@@ -127,36 +127,7 @@ jobs:
       - name: Update and Publish the Helm Index
         if: ${{ env.PUBLISH == 'true' }}
         run: |
-          tmpDir=$(mktemp -d)
-          pushd $tmpDir >& /dev/null
-
-          git clone ${REPO_URL}
-          cd ${REPOSITORY}
-          git config user.name "${OWNER}"
-          git config user.email "${OWNER}@users.noreply.github.com"
-          git remote set-url origin ${REPO_URL}
-          git checkout ${PUBLISH_BRANCH}
-
-          helm repo index ${CHARTS_TMP_DIR} --url ${CHARTS_URL} --merge "${INDEX_DIR}/index.yaml"
-          mv -f ${CHARTS_TMP_DIR}/index.yaml ${INDEX_DIR}/index.yaml
-
-          # Rewrite the urls into the correct OCI format for the index
-          yq -i '.entries.liferay[].urls[] |= sub("-(\d+\.\d+\.\d+)\.tgz", ":$1")' ${INDEX_DIR}/index.yaml
-
-          # Copy the markdown files to the gh-pages branch
-          find ${SOURCE_DIR} -name "*.md" -exec cp -f '{}' . \;
-
-          # Add all changed files to the index
-          git add --all
-
-          # Diff for observability
-          git diff --cached
-
-          git commit -m "Publish $charts"
-          git push origin ${PUBLISH_BRANCH}
-
-          popd >& /dev/null
-          rm -rf $tmpDir
+          ./.github/scripts/publish_helm_index.sh
         env:
           CHARTS_URL: "oci://ghcr.io/${{ github.actor }}/${{ github.event.repository.name }}/charts"
           INDEX_DIR: charts
