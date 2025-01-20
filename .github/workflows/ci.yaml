@@ -100,7 +100,7 @@ jobs:
       - name: Log in to registry with Helm
         if: ${{ env.PUBLISH == 'true' }}
         run: |
-          echo "${{ github.token }}" | helm registry login ghcr.io/${{ github.repository }} --username ${{ github.actor }} --password-stdin
+          echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io/${{ github.repository }} --username ${{ github.actor }} --password-stdin
 
       - name: Push Helm Charts to Github Container Registry (OCI)
         if: ${{ env.PUBLISH == 'true' }}
@@ -162,5 +162,5 @@ jobs:
           INDEX_DIR: charts
           OWNER: ${{ github.actor }}
           PUBLISH_BRANCH: gh-pages
-          REPO_URL: "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}"
+          REPO_URL: "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
           REPOSITORY: ${{ github.event.repository.name }}
