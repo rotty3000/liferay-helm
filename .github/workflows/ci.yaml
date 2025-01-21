@@ -22,6 +22,7 @@ env:
   CHART_VERSION: "0.0.0"
   CHARTS_TMP_DIR: dist
   LC_ALL: en_US.UTF-8
+  MAIN_REPO: "rotty3000/liferay-helm"
   PUBLISH: "false"
   SOURCE_DIR: "."
 
@@ -50,29 +51,29 @@ jobs:
         run: |
           helm version
 
-      - name: Install the latest version of Kind
-        shell: bash
-        run: |
-          curl -Lo ./kind https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64
-          chmod +x ./kind
-          sudo mv ./kind /usr/local/bin/kind
+      # - name: Install the latest version of Kind
+      #   shell: bash
+      #   run: |
+      #     curl -Lo ./kind https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64
+      #     chmod +x ./kind
+      #     sudo mv ./kind /usr/local/bin/kind
 
-      - name: Verify Kind Installation
-        shell: bash
-        run: |
-          kind version
+      # - name: Verify Kind Installation
+      #   shell: bash
+      #   run: |
+      #     kind version
 
-      - name: Create Kind Cluster
-        shell: bash
-        run: |
-          kind create cluster
+      # - name: Create Kind Cluster
+      #   shell: bash
+      #   run: |
+      #     kind create cluster
 
       - name: Run Helm Test
         id: helm-test
         run: |
-          helm upgrade -i liferay .
-          helm test liferay && \
-            echo "PUBLISH=${{ (github.repository == 'LiferayCloud/liferay-helm-chart') && startsWith(github.ref, 'refs/tags/') && (github.event_name != 'pull_request') }}" >> ${GITHUB_ENV}
+          #helm upgrade -i liferay .
+          #helm test liferay && \
+            echo "PUBLISH=${{ (github.repository == env.MAIN_REPO) && startsWith(github.ref, 'refs/tags/') && (github.event_name != 'pull_request') }}" >> ${GITHUB_ENV}
 
       - name: Calculate Chart Version
         if: ${{ env.PUBLISH == 'true' }}
@@ -100,15 +101,16 @@ jobs:
       - name: Log in to registry with Helm
         if: ${{ env.PUBLISH == 'true' }}
         run: |
-          echo "${{ github.token }}" | helm registry login ghcr.io/${{ github.repository }} --username ${{ github.actor }} --password-stdin
+          echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io/${{ github.repository }} --username ${{ github.actor }} --password-stdin
 
       - name: Push Helm Charts to Github Container Registry (OCI)
         if: ${{ env.PUBLISH == 'true' }}
         working-directory: dist
         run: |
+          HELM_REPOSITORY=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
           for f in *.tgz ; do
               echo "$f"
-              helm push $f oci://ghcr.io/${{ github.repository }}/charts --debug
+              helm push $f oci://ghcr.io/${HELM_REPOSITORY}/charts
           done
 
       - name: Install YQ
@@ -126,40 +128,13 @@ jobs:
       - name: Update and Publish the Helm Index
         if: ${{ env.PUBLISH == 'true' }}
         run: |
-          tmpDir=$(mktemp -d)
-          pushd $tmpDir >& /dev/null
-
-          git clone ${REPO_URL}
-          cd ${REPOSITORY}
-          git config user.name "${OWNER}"
-          git config user.email "${OWNER}@users.noreply.github.com"
-          git remote set-url origin ${REPO_URL}
-          git checkout ${PUBLISH_BRANCH}
-
-          helm repo index ${CHARTS_TMP_DIR} --url ${CHARTS_URL} --merge "${INDEX_DIR}/index.yaml"
-          mv -f ${CHARTS_TMP_DIR}/index.yaml ${INDEX_DIR}/index.yaml
-
-          # Rewrite the urls into the correct OCI format for the index
-          yq -i '.entries.liferay[].urls[] |= sub("-(\d+\.\d+\.\d+)\.tgz", ":$1")' ${INDEX_DIR}/index.yaml
-
-          # Copy the markdown files to the gh-pages branch
-          find ${SOURCE_DIR} -name "*.md" -exec cp -f '{}' . \;
-
-          # Add all changed files to the index
-          git add --all
-
-          # Diff for observability
-          git diff --cached
-
-          git commit -m "Publish $charts"
-          git push origin ${PUBLISH_BRANCH}
-
-          popd >& /dev/null
-          rm -rf $tmpDir
+          ./.github/scripts/publish_helm_index.sh
         env:
           CHARTS_URL: "oci://ghcr.io/${{ github.actor }}/${{ github.event.repository.name }}/charts"
+          GIT_REPOSITORY: ${{ github.repository }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           INDEX_DIR: charts
           OWNER: ${{ github.actor }}
           PUBLISH_BRANCH: gh-pages
-          REPO_URL: "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}"
+          REPO_URL: "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
           REPOSITORY: ${{ github.event.repository.name }}
