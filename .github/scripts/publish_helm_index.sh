@@ -34,10 +34,10 @@ do
 done
 
 gh api graphql \
-	-F \$githubRepository=${GIT_REPOSITORY} \
+	-F githubRepository=${GIT_REPOSITORY} \
 	-F branchName=${PUBLISH_BRANCH} \
 	-F expectedHeadOid=$(git rev-parse HEAD) \
-	-F commitMessage="publish: new helm index release" \
+	-F commitMessage="github-actions[bot] commit updated helm index" \
 	-F 'query=@.github/api/createCommitOnBranch.gql' \
 	${FILES}
 
