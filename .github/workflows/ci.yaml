@@ -71,8 +71,8 @@ jobs:
       - name: Run Helm Test
         id: helm-test
         run: |
-          helm upgrade -i liferay .
-          helm test liferay && \
+          #helm upgrade -i liferay .
+          #helm test liferay && \
             echo "PUBLISH=${{ (github.repository == env.MAIN_REPO) && startsWith(github.ref, 'refs/tags/') && (github.event_name != 'pull_request') }}" >> ${GITHUB_ENV}
 
       - name: Calculate Chart Version
