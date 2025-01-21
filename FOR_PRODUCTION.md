@@ -12,7 +12,7 @@ config: {}
 Once the file has all the necessary configuration it can be supplied to the helm install command as follows:
 
 ```shell
-helm upgrade -i liferay-helm -n liferay-system --create-namespace -f custom-values.yaml rotty3000-liferay-helm/liferay-helm
+helm upgrade -i liferay -n liferay-system --create-namespace -f custom-values.yaml liferay-helm-chart-repo/liferay
 ```
 
 ### Disable internal services
@@ -140,5 +140,5 @@ This pattern can be used as many times as necessary.
 To view the set of available chart values the following command can be used:
 
 ```shell
-helm show values rotty3000-liferay-helm/liferay-helm
+helm show values liferay-helm-chart-repo/liferay
 ```

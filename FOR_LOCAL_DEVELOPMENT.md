@@ -24,13 +24,13 @@ k3d cluster create playground \
 It is recommended to install the chart into a custom namespace.
 
 ```shell
-helm upgrade -i liferay-helm -n liferay-system --create-namespace rotty3000-liferay-helm/liferay-helm
+helm upgrade -i liferay -n liferay-system --create-namespace liferay-helm-chart-repo/liferay
 ```
 
 _Or from a local clone of the repository_:
 
 ```shell
-helm upgrade -i liferay-helm -n liferay-system --create-namespace .
+helm upgrade -i liferay -n liferay-system --create-namespace .
 ```
 
 By default the chart will use the `liferay/dxp:latest` docker image.
@@ -42,7 +42,7 @@ There are many moving parts (including downloading the Liferay DXP image) and so
 I recommend using the following command (which you can run immediately after the helm command completes):
 
 ```shell
-sterm -n liferay-system liferay-helm-0
+sterm -n liferay-system liferay-0
 ```
 
 This will log all the output of Liferay DXP (including waiting for it to start).
@@ -67,7 +67,7 @@ There are 3 preset addresses:
 To specify the version of Liferay DXP to deploy supply a value for `image.tag` on the command line
 
 ```shell
-helm upgrade -i liferay-helm -n liferay-system --create-namespace \
+helm upgrade -i liferay -n liferay-system --create-namespace \
 	--set image.tag=2024.q3.13 \
 	.
 ```
@@ -90,7 +90,7 @@ If all you want to do is update the chart, simply execute the install instructio
 However, to uninstall the chart simply do:
 
 ```shell
-helm uninstall -n liferay-system liferay-helm
+helm uninstall -n liferay-system liferay
 ```
 
 ### Starting from Scratch
@@ -101,10 +101,10 @@ First uninstall the chart as above. Then remove all the persistent volumes (whic
 
 ```shell
 k delete -n liferay-system persistentvolumeclaims \
-  liferay-elasticsearch-pvc-liferay-helm-elasticsearch-0 \
-  liferay-minio-pvc-liferay-helm-minio-0 \
-  liferay-postgres-pvc-liferay-helm-postgres-0 \
-  liferay-working-data-pvc-liferay-helm-0
+  liferay-elasticsearch-pvc-liferay-elasticsearch-0 \
+  liferay-minio-pvc-liferay-minio-0 \
+  liferay-postgres-pvc-liferay-postgres-0 \
+  liferay-working-data-pvc-liferay-0
 ```
 
 ## Basic Observation of the Chart

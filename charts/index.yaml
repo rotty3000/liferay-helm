@@ -1,5 +1,16 @@
 apiVersion: v1
 entries:
+  liferay:
+    - apiVersion: v2
+      appVersion: latest
+      created: "2025-01-21T15:32:29.13762516Z"
+      description: A Liferay DXP Helm chart for Kubernetes
+      digest: d62df468a89a41b9c6613dc57d54cc29a063c5794ee955f219fccfd33e8b243d
+      name: liferay
+      type: application
+      urls:
+        - oci://ghcr.io/rotty3000/liferay-helm/charts/liferay:0.2.6
+      version: 0.2.6
   liferay-helm:
     - apiVersion: v2
       appVersion: latest
@@ -41,4 +52,4 @@ entries:
       urls:
         - oci://ghcr.io/rotty3000/liferay-helm/charts/liferay-helm:0.0.0
       version: 0.0.0
-generated: "2025-01-16T21:51:57.393726382Z"
+generated: "2025-01-21T15:32:29.136447844Z"
