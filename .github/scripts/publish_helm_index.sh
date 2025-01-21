@@ -30,7 +30,7 @@ CHANGED=($(git diff --name-only | xargs))
 
 for value in "${CHANGED[@]}"
 do
-  FILES="${FILES} -F files[][path]=\"$value\" -F files[][contents]=$(base64 -w0 $value)"
+  FILES="${FILES} -F files[][path]=$value -F files[][contents]=$(base64 -w0 $value)"
 done
 
 gh api graphql \
