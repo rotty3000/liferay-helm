@@ -38,7 +38,7 @@ gh api graphql \
 	-F branchName=${PUBLISH_BRANCH} \
 	-F expectedHeadOid=$(git rev-parse HEAD) \
 	-F commitMessage="publish: new helm index release" \
-	-F "query=@.github/api/createCommitOnBranch.gql" \
+	-F 'query=@.github/api/createCommitOnBranch.gql' \
 	${FILES}
 
 popd >& /dev/null
